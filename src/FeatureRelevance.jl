@@ -1,4 +1,4 @@
-module FeatureImportance
+module FeatureRelevance
     using DataFrames
     using ProgressMeter
     using InformationMeasures

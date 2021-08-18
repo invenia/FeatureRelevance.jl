@@ -4,6 +4,7 @@ function (::PredictivePowerScore)(x, y; kwargs...)
     return pps(x, y; kwargs...)
 end
 
+# approach is based on https://towardsdatascience.com/rip-correlation-introducing-the-predictive-power-score-3d90808b9598
 function pps(x,y; n_folds=4, kwargs...)
     # regression task error metric variables
     sum_ae_model = 0.0

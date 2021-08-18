@@ -1,0 +1,13 @@
+name = "FeatureImportance"
+uuid = "040f642a-ad44-44b2-91d4-df3a5c5fa484"
+version = "0.1.0"
+
+[deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+InformationMeasures = "96684042-fbdc-5399-9b8e-d34e539a126c"
+LightGBM = "7acf609c-83a4-11e9-1ffb-b912bcd3b04a"
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

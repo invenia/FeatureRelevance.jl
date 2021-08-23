@@ -405,7 +405,7 @@ function select(
 )
     # For each target node, get features
     feature_mapping = Dict{Symbol, DataFrame}()
-    @showprogress for target_name in Symbol.(names(targets))
+    for target_name in Symbol.(names(targets))
         feature_mapping[target_name] = _select_single_target(
             fsm,
             targets[:,[target_name]],

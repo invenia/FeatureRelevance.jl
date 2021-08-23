@@ -1,10 +1,19 @@
-using Test
-using Random
 using DataFrames
+using FeatureRelevance
 using InformationMeasures
-using ProgressMeter
+using Random
 using Statistics
+using Test
 
-include("../src/FeatureImportance.jl")
-include("../src/feature_selection.jl")
+using FeatureRelevance:
+    GreedyJMI,
+    GreedyMRMR,
+    MutualInformation,
+    ConditionalMutualInformation,
+    NormalisedMutualInformation,
+    PearsonCorrelation,
+    Top,
+    _select_single_target,
+    select
+
 include("feature_selection.jl")

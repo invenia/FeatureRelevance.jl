@@ -1,5 +1,7 @@
 # FeatureRelevance.jl
 
+[![Docs: Latest](https://img.shields.io/badge/docs-latest-blue.svg)](http://docs.invenia.ca/invenia/research/FeatureRelevance.jl)
+
 Example usage for different metrics/selection approaches:
 
 ```

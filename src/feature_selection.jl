@@ -51,17 +51,21 @@ struct GreedyJMI <: GreedyMethod
 end
 
 function (::MutualInformation)(x, y; kwargs...)
-    return get_mutual_information(x, y, estimator="shrinkage")
+    return get_mutual_information(x, y; estimator="shrinkage")
 end
 
 function (::NormalisedMutualInformation)(x, y; kwargs...)
     # https://en.wikipedia.org/wiki/Mutual_information#Normalized_variants
     mi = (MutualInformation())(x, y)
-    return mi / sqrt(get_entropy(x, estimator="shrinkage") * get_entropy(y, estimator="shrinkage"))
+    return mi / sqrt(
+        get_entropy(x; estimator="shrinkage") * get_entropy(y; estimator="shrinkage")
+    )
 end
 
 function (::ConditionalMutualInformation)(x, y; conditioned_variable, kwargs...)
-    return get_conditional_mutual_information(x, y, conditioned_variable; estimator="shrinkage")
+    return get_conditional_mutual_information(
+        x, y, conditioned_variable; estimator="shrinkage"
+    )
 end
 
 function (::PearsonCorrelation)(x, y; kwargs...)
@@ -79,10 +83,12 @@ kwargs are passed through to criterion.
 """
 function calculate_feature_stats(
     criterion::FeatureRelevanceCriterion,
-    x::Union{AbstractVector{Union{Missing, Float64}}, AbstractVector{Float64}},
-    y::Union{AbstractVector{Union{Missing, Float64}}, AbstractVector{Float64}};
-    conditioned_variable::Union{AbstractVector{Union{Missing, Float64}}, AbstractVector{Float64}}=Float64[],
-    kwargs...
+    x::Union{AbstractVector{Union{Missing,Float64}},AbstractVector{Float64}},
+    y::Union{AbstractVector{Union{Missing,Float64}},AbstractVector{Float64}};
+    conditioned_variable::Union{
+        AbstractVector{Union{Missing,Float64}},AbstractVector{Float64}
+    }=Float64[],
+    kwargs...,
 )
     # NOTE: relaxing the above type signature from Float64 to T<:Real works in Julia 1.2
     # but causes the GreedyJMI method to segfault in Julia 1.1 in some instances. So
@@ -92,13 +98,12 @@ function calculate_feature_stats(
 
     # Need to ensure we match up non-missing indices between all variables
     non_na_idx = intersect(
-        findall(.!ismissing.(x) .& isfinite.(x)),
-        findall(.!ismissing.(y) .& isfinite.(y))
+        findall(.!ismissing.(x) .& isfinite.(x)), findall(.!ismissing.(y) .& isfinite.(y))
     )
     if !isempty(conditioned_variable)
         non_na_idx = intersect(
             non_na_idx,
-            findall(.!ismissing.(conditioned_variable) .& isfinite.(conditioned_variable))
+            findall(.!ismissing.(conditioned_variable) .& isfinite.(conditioned_variable)),
         )
     end
 
@@ -110,21 +115,19 @@ function calculate_feature_stats(
         conditioned_variable = convert(Vector{Float64}, conditioned_variable[non_na_idx])
     end
 
-    y_percent_diff = (maximum(y) - minimum(y)) ./ minimum(y);
-    x_percent_diff = (maximum(x) - minimum(x)) ./ minimum(x);
+    y_percent_diff = (maximum(y) - minimum(y)) ./ minimum(y)
+    x_percent_diff = (maximum(x) - minimum(x)) ./ minimum(x)
 
     # check if more than one discretized value
     # take absolute value since julia has -0.0 and 0.0 and these are the same,
     # but don't get combined with unique
-    if (length(unique(abs.(x))) > 1) & (length(unique(abs.(y))) > 1) &
-        # make sure that there aren't just different values due to rounding differences
-        (abs(x_percent_diff) > 1e-5) & (abs(y_percent_diff) > 1e-5)
-
-        relevance = criterion(
-            x, y;
-            conditioned_variable=conditioned_variable, kwargs...
-        )
-        tmp_df = DataFrame(relevance=relevance)
+    if (length(unique(abs.(x))) > 1) &
+       (length(unique(abs.(y))) > 1) &
+       # make sure that there aren't just different values due to rounding differences
+       (abs(x_percent_diff) > 1e-5) &
+       (abs(y_percent_diff) > 1e-5)
+        relevance = criterion(x, y; conditioned_variable=conditioned_variable, kwargs...)
+        tmp_df = DataFrame(; relevance=relevance)
     end
 
     return tmp_df
@@ -134,16 +137,9 @@ end
 Calculate feature relevance pairwise between all colummns of x and y.
 """
 function calculate_feature_stats(
-    criterion::FeatureRelevanceCriterion,
-    x::DataFrame,
-    y::DataFrame;
-    kwargs...
+    criterion::FeatureRelevanceCriterion, x::DataFrame, y::DataFrame; kwargs...
 )
-    feature_stats = DataFrame(
-        relevance = Float64[],
-        x_name = Symbol[],
-        y_name = Symbol[]
-    )
+    feature_stats = DataFrame(; relevance=Float64[], x_name=Symbol[], y_name=Symbol[])
 
     x_features = names(x)
     y_features = names(y)
@@ -151,14 +147,11 @@ function calculate_feature_stats(
     for y_feature in y_features
         for x_feature in x_features
             tmp_df = calculate_feature_stats(
-                criterion,
-                x[:,x_feature],
-                y[:,y_feature];
-                kwargs...
+                criterion, x[:, x_feature], y[:, y_feature]; kwargs...
             )
             if !ismissing(tmp_df)
-                tmp_df[!,:x_name] .= Symbol(x_feature)
-                tmp_df[!,:y_name] .= Symbol(y_feature)
+                tmp_df[!, :x_name] .= Symbol(x_feature)
+                tmp_df[!, :y_name] .= Symbol(y_feature)
                 append!(feature_stats, tmp_df)
             end
         end
@@ -176,8 +169,7 @@ function _safety_check(target::DataFrame, features::DataFrame)
     # Here we just check the column names
     cheating_features = intersect(names(features), names(target))
     if !isempty(cheating_features)
-        err = "Features overlap with target! " *
-            "Intersection = $cheating_features"
+        err = "Features overlap with target! " * "Intersection = $cheating_features"
         throw(ArgumentError(err))
     end
 end
@@ -200,11 +192,7 @@ Available `FeatureSelectionMethod`s are: `Top`, `GreedyMRMR`, `GreedyJMI`.
 - `selected_features`: Vector of feature names selected.
 - `scores`: Scores associated with these features.
 """
-function _select_single_target(
-    top::Top,
-    target::DataFrame,
-    features::DataFrame
-)
+function _select_single_target(top::Top, target::DataFrame, features::DataFrame)
     _safety_check(target, features)
 
     # If N is too large, just return all features
@@ -212,13 +200,13 @@ function _select_single_target(
     num_requested = top.N
     if num_requested >= num_features
         @warn "Requested $(num_requested) features out of $(num_features), " *
-            "returning all features"
+              "returning all features"
         num_requested = num_features
     end
 
     feature_stats = calculate_feature_stats(top.criterion, features, target)
     # Select top N features
-    sort!(feature_stats, :relevance, rev=true)
+    sort!(feature_stats, :relevance; rev=true)
     selected_features = feature_stats[1:num_requested, :x_name]
     scores = feature_stats[1:num_requested, :relevance]
 
@@ -227,21 +215,17 @@ function _select_single_target(
     return DataFrame(:feature => selected_features, :score => scores)
 end
 
-
-
 function _select_single_target(
-    rfmetric::RandomForestMethod,
-    target::DataFrame,
-    features::DataFrame
+    rfmetric::RandomForestMethod, target::DataFrame, features::DataFrame
 )
     _safety_check(target, features)
 
-    y = target[:,1]
+    y = target[:, 1]
 
     # replace missings with NaN
     x = Matrix{Float64}(coalesce.(features, NaN))
 
-    return DataFrame(:feature => Symbol.(names(features)), :score => rfmetric(x,y))
+    return DataFrame(:feature => Symbol.(names(features)), :score => rfmetric(x, y))
 end
 
 _use_β(::GreedyMRMR) = true
@@ -263,11 +247,7 @@ This is based on [1] equation 17/18.
 [1] Brown et al., 2012. Conditional Likelihood Maximisation: A Unifying Framework for
 Information Theoretic Feature Selection, JMLR 13.
 """
-function _select_single_target(
-    greedy::GreedyMethod,
-    target::DataFrame,
-    features::DataFrame
-)
+function _select_single_target(greedy::GreedyMethod, target::DataFrame, features::DataFrame)
     mi = MutualInformation()
     cmi = ConditionalMutualInformation()
 
@@ -281,11 +261,7 @@ function _select_single_target(
     # Relevance of all features to this target. This is target-specific. There is no
     # way around computing this for all features, so just compute it now.
     # This is the first term in the RHS of [1] eq. 18
-    target_relevance = calculate_feature_stats(
-        mi,
-        features,
-        target
-    )
+    target_relevance = calculate_feature_stats(mi, features, target)
 
     # Relevance of features to each other - fill in as necessary.
     # This is independent of the target.
@@ -298,7 +274,7 @@ function _select_single_target(
     feature_conditional_relevance = DataFrame()
 
     # Select N features greedily
-    for f in 1:greedy.N
+    for f in 1:(greedy.N)
         if isempty(features_remaining)
             @warn "Ran out of features, returning all"
             break
@@ -309,7 +285,7 @@ function _select_single_target(
 
         if isempty(features_selected)
             # Just pick best feature
-            sort!(stats, :relevance, rev=true)
+            sort!(stats, :relevance; rev=true)
             new_feature = stats[1, :x_name]
             push!(features_selected, new_feature)
             push!(scores, stats[1, :relevance])
@@ -328,19 +304,19 @@ function _select_single_target(
             # selected feature.
             # Keep track of this to avoid re-computation.
             df = calculate_feature_stats(
-                mi,
-                features[:, features_remaining],
-                features[:, features_selected[[end]]],
+                mi, features[:, features_remaining], features[:, features_selected[[end]]]
             )
             feature_relevance = vcat(feature_relevance, df)
             # Consolidate for all features remaining
             #sum_fr = by(feature_relevance, :x_name, redundancy_β = :relevance => sum)
-            sum_fr = combine(groupby(feature_relevance, :x_name), :relevance => sum => :redundancy_β)
+            sum_fr = combine(
+                groupby(feature_relevance, :x_name), :relevance => sum => :redundancy_β
+            )
 
-            sum_fr[!,:redundancy_β] = β * sum_fr[:,:redundancy_β]
-            stats = innerjoin(stats, sum_fr[:,[:x_name, :redundancy_β]], on=:x_name)
+            sum_fr[!, :redundancy_β] = β * sum_fr[:, :redundancy_β]
+            stats = innerjoin(stats, sum_fr[:, [:x_name, :redundancy_β]]; on=:x_name)
         else
-            stats[!,:redundancy_β] .= 0.0
+            stats[!, :redundancy_β] .= 0.0
         end
 
         if _use_γ(greedy)
@@ -353,7 +329,7 @@ function _select_single_target(
                 cmi,
                 features[:, features_remaining],
                 features[:, features_selected[[end]]];
-                conditioned_variable = target[:,1]
+                conditioned_variable=target[:, 1],
             )
             feature_conditional_relevance = vcat(feature_conditional_relevance, df)
             # Consolidate for all features remaining
@@ -362,15 +338,17 @@ function _select_single_target(
             #     :x_name,
             #     redundancy_γ = :relevance => sum
             # )
-            sum_fcr = combine(groupby(feature_conditional_relevance, :x_name),
-                :relevance => sum => :redundancy_γ)
-            sum_fcr[!,:redundancy_γ] = γ * sum_fcr[:,:redundancy_γ]
-            stats = innerjoin(stats, sum_fcr[:, [:x_name, :redundancy_γ]], on=:x_name)
+            sum_fcr = combine(
+                groupby(feature_conditional_relevance, :x_name),
+                :relevance => sum => :redundancy_γ,
+            )
+            sum_fcr[!, :redundancy_γ] = γ * sum_fcr[:, :redundancy_γ]
+            stats = innerjoin(stats, sum_fcr[:, [:x_name, :redundancy_γ]]; on=:x_name)
         else
-            stats[!,:redundancy_γ] .= 0.0
+            stats[!, :redundancy_γ] .= 0.0
         end
         stats.score = stats.relevance .- (stats.redundancy_β .- stats.redundancy_γ)
-        sort!(stats, :score, rev=true)
+        sort!(stats, :score; rev=true)
 
         # Select top feature
         new_feature = stats[1, :x_name]
@@ -398,18 +376,12 @@ of `features`.
   values are DataFrames with columns `:feature` and `:score`. The features are in selection
   order.
 """
-function select(
-    fsm::FeatureSelectionMethod,
-    targets::DataFrame,
-    features::DataFrame
-)
+function select(fsm::FeatureSelectionMethod, targets::DataFrame, features::DataFrame)
     # For each target node, get features
-    feature_mapping = Dict{Symbol, DataFrame}()
+    feature_mapping = Dict{Symbol,DataFrame}()
     for target_name in Symbol.(names(targets))
         feature_mapping[target_name] = _select_single_target(
-            fsm,
-            targets[:,[target_name]],
-            features
+            fsm, targets[:, [target_name]], features
         )
     end
     return feature_mapping

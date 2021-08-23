@@ -26,7 +26,7 @@ version = "0.27.5"
 
 [[FeatureRelevance]]
 path = ".."
-uuid = "159fc867-078f-4ee9-9ef7-a1c4021e7832"
+uuid = "040f642a-ad44-44b2-91d4-df3a5c5fa484"
 version = "0.1.0"
 
 [[IOCapture]]

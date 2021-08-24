@@ -83,9 +83,7 @@ rng = MersenneTwister(1)
             cmi[a] = Dict()
             for b in Symbol.(names(df))
                 mi[a][b] = MutualInformation()(df[:, a], df[:, b])
-                cmi[a][b] = ConditionalMutualInformation()(
-                    df[:, a], df[:, b]; conditioned_variable=df[:, 1]
-                )
+                cmi[a][b] = ConditionalMutualInformation()(df[:, a], df[:, b], df[:, 1])
             end
         end
 

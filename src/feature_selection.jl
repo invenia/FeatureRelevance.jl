@@ -1,15 +1,4 @@
 """
-What determines the relevance between features.
-"""
-abstract type FeatureRelevanceCriterion end
-
-struct MutualInformation <: FeatureRelevanceCriterion end
-struct ConditionalMutualInformation <: FeatureRelevanceCriterion end
-struct NormalisedMutualInformation <: FeatureRelevanceCriterion end
-struct PearsonCorrelation <: FeatureRelevanceCriterion end
-struct SpearmanCorrelation <: FeatureRelevanceCriterion end
-
-"""
 How do we select features.
 """
 abstract type FeatureSelectionMethod end
@@ -17,7 +6,7 @@ abstract type GreedyMethod <: FeatureSelectionMethod end
 abstract type RandomForestMethod <: FeatureSelectionMethod end
 
 """
-    Top(N, ::FeatureRelevanceCriterion)
+    Top(N, ::AbstractCriterion)
 
 Select the top N relevant features.
 This is fast but might result in redundant features.
@@ -25,7 +14,7 @@ Mutual information maximisation (MIM).
 """
 struct Top <: FeatureSelectionMethod
     N::Int
-    criterion::FeatureRelevanceCriterion
+    criterion::AbstractCriterion
 end
 
 """
@@ -50,45 +39,16 @@ struct GreedyJMI <: GreedyMethod
     N::Int
 end
 
-function (::MutualInformation)(x, y; kwargs...)
-    return get_mutual_information(x, y; estimator="shrinkage")
-end
-
-function (::NormalisedMutualInformation)(x, y; kwargs...)
-    # https://en.wikipedia.org/wiki/Mutual_information#Normalized_variants
-    mi = (MutualInformation())(x, y)
-    return mi / sqrt(
-        get_entropy(x; estimator="shrinkage") * get_entropy(y; estimator="shrinkage")
-    )
-end
-
-function (::ConditionalMutualInformation)(x, y; conditioned_variable, kwargs...)
-    return get_conditional_mutual_information(
-        x, y, conditioned_variable; estimator="shrinkage"
-    )
-end
-
-function (::PearsonCorrelation)(x, y; kwargs...)
-    return cor(x, y)
-end
-
-function (::SpearmanCorrelation)(x, y; kwargs...)
-    return corspearman(x, y)
-end
-
 """
 Calculate feature relevance between x and y, handling missing and cases where
 there is only one unique value.
 kwargs are passed through to criterion.
 """
 function calculate_feature_stats(
-    criterion::FeatureRelevanceCriterion,
+    criterion::AbstractCriterion,
     x::Union{AbstractVector{Union{Missing,Float64}},AbstractVector{Float64}},
-    y::Union{AbstractVector{Union{Missing,Float64}},AbstractVector{Float64}};
-    conditioned_variable::Union{
-        AbstractVector{Union{Missing,Float64}},AbstractVector{Float64}
-    }=Float64[],
-    kwargs...,
+    y::Union{AbstractVector{Union{Missing,Float64}},AbstractVector{Float64}},
+    z::Union{AbstractVector{Union{Missing,Float64}},AbstractVector{Float64}}=Float64[],
 )
     # NOTE: relaxing the above type signature from Float64 to T<:Real works in Julia 1.2
     # but causes the GreedyJMI method to segfault in Julia 1.1 in some instances. So
@@ -100,19 +60,16 @@ function calculate_feature_stats(
     non_na_idx = intersect(
         findall(.!ismissing.(x) .& isfinite.(x)), findall(.!ismissing.(y) .& isfinite.(y))
     )
-    if !isempty(conditioned_variable)
-        non_na_idx = intersect(
-            non_na_idx,
-            findall(.!ismissing.(conditioned_variable) .& isfinite.(conditioned_variable)),
-        )
+    if !isempty(z)
+        non_na_idx = intersect(non_na_idx, findall(.!ismissing.(z) .& isfinite.(z)))
     end
 
     length(non_na_idx) == 0 && return tmp_df
 
     x = convert(Vector{Float64}, x[non_na_idx])
     y = convert(Vector{Float64}, y[non_na_idx])
-    if !isempty(conditioned_variable)
-        conditioned_variable = convert(Vector{Float64}, conditioned_variable[non_na_idx])
+    if !isempty(z)
+        z = convert(Vector{Float64}, z[non_na_idx])
     end
 
     y_percent_diff = (maximum(y) - minimum(y)) ./ minimum(y)
@@ -126,7 +83,7 @@ function calculate_feature_stats(
        # make sure that there aren't just different values due to rounding differences
        (abs(x_percent_diff) > 1e-5) &
        (abs(y_percent_diff) > 1e-5)
-        relevance = criterion(x, y; conditioned_variable=conditioned_variable, kwargs...)
+        relevance = isempty(z) ? criterion(x, y) : criterion(x, y, z)
         tmp_df = DataFrame(; relevance=relevance)
     end
 
@@ -136,9 +93,7 @@ end
 """
 Calculate feature relevance pairwise between all colummns of x and y.
 """
-function calculate_feature_stats(
-    criterion::FeatureRelevanceCriterion, x::DataFrame, y::DataFrame; kwargs...
-)
+function calculate_feature_stats(criterion, x::DataFrame, y::DataFrame, args...)
     feature_stats = DataFrame(; relevance=Float64[], x_name=Symbol[], y_name=Symbol[])
 
     x_features = names(x)
@@ -146,9 +101,7 @@ function calculate_feature_stats(
 
     for y_feature in y_features
         for x_feature in x_features
-            tmp_df = calculate_feature_stats(
-                criterion, x[:, x_feature], y[:, y_feature]; kwargs...
-            )
+            tmp_df = calculate_feature_stats(criterion, x[:, x_feature], y[:, y_feature], args...)
             if !ismissing(tmp_df)
                 tmp_df[!, :x_name] .= Symbol(x_feature)
                 tmp_df[!, :y_name] .= Symbol(y_feature)
@@ -328,8 +281,8 @@ function _select_single_target(greedy::GreedyMethod, target::DataFrame, features
             df = calculate_feature_stats(
                 cmi,
                 features[:, features_remaining],
-                features[:, features_selected[[end]]];
-                conditioned_variable=target[:, 1],
+                features[:, features_selected[[end]]],
+                target[:, 1],
             )
             feature_conditional_relevance = vcat(feature_conditional_relevance, df)
             # Consolidate for all features remaining

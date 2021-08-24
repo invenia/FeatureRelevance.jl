@@ -169,7 +169,7 @@ function _safety_check(target::DataFrame, features::DataFrame)
     # Here we just check the column names
     cheating_features = intersect(names(features), names(target))
     if !isempty(cheating_features)
-        err = "Features overlap with target! " * "Intersection = $cheating_features"
+        err = "Features overlap with target! Intersection = $cheating_features"
         throw(ArgumentError(err))
     end
 end

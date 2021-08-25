@@ -15,46 +15,19 @@ rng = MersenneTwister(1)
         targets = df[:, [1]]
         features = df[:, 2:end]
 
-        methods = (Top(2, NormalisedMutualInformation()), GreedyMRMR(2), GreedyJMI(2))
-        for m in methods
-            @testset "$m basic properties" begin
-                @testset "Safety checks" begin
-                    # Pass in target as a feature
-                    @test_throws ArgumentError _select_single_target(m, df, df)
-                    # Try to use more than one target
-                    @test_throws ArgumentError _select_single_target(
-                        m, df[:, 1:2], df[:, 3:end]
-                    )
-                    # Try to pass in bare array as target
-                    @test_throws MethodError _select_single_target(
-                        m, df[:, 1], df[:, 2:end]
-                    )
-                end
-
-                selected_features = _select_single_target(m, targets, features)[:, :feature]
-                @testset "Find most relevant" begin
-                    @test :x1 ∈ selected_features
-                end
-            end
-        end
-
         @testset "Top N" begin
             # Top N will just find the top features, even though they are duplicates
-            f = sort(
-                _select_single_target(Top(2, MutualInformation()), targets, features)[
-                    :, :feature
-                ],
-            )
-            @test f == [:x1, :x2]
+            r = DataFrame(report(MutualInformation(), Top(2), targets, features))
+            @test r.feature == [:x1, :x2]
         end
 
         # Both MRMR and JMI should be clever enough to get x1/2 and x3
         # They should NOT pick both x1 and x2 since this is a straight duplicate
         for m in (GreedyMRMR(2), GreedyJMI(2))
             @testset "$m correct" begin
-                f = sort(_select_single_target(m, targets, features)[:, :feature])
-                @test f != [:x1, :x2]
-                @test (f == [:x1, :x3]) | (f == [:x2, :x3])
+                r = DataFrame(report(m, targets, features))
+                @test r.feature != [:x1, :x2]
+                @test (r.feature == [:x1, :x3]) || (r.feature == [:x2, :x3])
             end
         end
     end
@@ -87,7 +60,7 @@ rng = MersenneTwister(1)
             end
         end
 
-        m = _select_single_target(Top(3, MutualInformation()), targets, features)
+        m = DataFrame(report(MutualInformation(), Top(3), targets, features))
         f, scores = m[:, :feature], m[:, :score]
         @test f == [:x1, :x2, :x3]
         @test scores[1] ≈ mi[:target][:x1]
@@ -101,7 +74,7 @@ rng = MersenneTwister(1)
         features and is subtracted from the multual information of the candiate
         feature with the target feature =#
 
-        m = _select_single_target(GreedyMRMR(3), targets, features)
+        m = DataFrame(report(GreedyMRMR(3), targets, features))
         f, scores = m[:, :feature], m[:, :score]
         @test f == [:x1, :x3, :x2]
         @test scores[1] ≈ mi[:target][:x1]
@@ -109,7 +82,7 @@ rng = MersenneTwister(1)
         @test scores[3] ≈ mi[:target][:x2] - 1.0 / 2.0 * (mi[:x1][:x2] + mi[:x3][:x2])
 
         # randomly fails
-        m = _select_single_target(GreedyJMI(3), targets, features)
+        m = DataFrame(report(GreedyJMI(3), targets, features))
         f, scores = m[:, :feature], m[:, :score]
         @test f == [:x1, :x3, :x2]
         @test scores[1] ≈ mi[:target][:x1]
@@ -122,11 +95,10 @@ rng = MersenneTwister(1)
     @testset "Select multiple" begin
         targets = DataFrame(:t1 => rand(4), :t2 => rand(4))
         features = DataFrame(rand(4, 10), :auto)
-        m = select(Top(3, PearsonCorrelation()), targets, features)
-        @test m isa Dict{Symbol,DataFrame}
-        @test sort(collect(keys(m))) == Symbol.(sort(names(targets)))
-        @test Symbol.(names(m[:t1])) == [:feature, :score]
-        @test nrow(m[:t1]) == 3
+        m = DataFrame(report(PearsonCorrelation(), Top(3), targets, features))
+        @test issetequal(m.target, propertynames(targets))
+        @test propertynames(m) == [:target, :feature, :score]
+        @test count(r -> r === :t1, m.target) == 3
     end
 
     # @testset "Snapshot feature selection" begin

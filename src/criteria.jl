@@ -1,16 +1,16 @@
 """
-AbstractCriterion
+    Criterion
 
 A callable type that determines the relevance between two features.
 New criterion types must implement `evaluate(criterion, x, y)`.
 """
-abstract type AbstractCriterion end
+abstract type Criterion end
 
 # NOTE: We may want to make the criterion types a kind of metric and extend Metrics.evaluate.
 
 # These types are callable, so they can be used interchangeably with functions in a
 # scoring method.
-(criterion::AbstractCriterion)(args...) = evaluate(criterion, args...)
+(criterion::Criterion)(args...) = evaluate(criterion, args...)
 
 """
     MutualInformation(; estimator="shrinkage")
@@ -18,7 +18,7 @@ abstract type AbstractCriterion end
 Estimate the [mutual information]([normalized mutual information](https://en.wikipedia.org/wiki/Mutual_information)
 between two sets of values using `InformationMeasures.get_mutual_information`.
 """
-Base.@kwdef struct MutualInformation <: AbstractCriterion
+Base.@kwdef struct MutualInformation <: Criterion
     estimator::String = "shrinkage"
 end
 
@@ -32,7 +32,7 @@ end
 Estimate the [normalized mutual information](https://en.wikipedia.org/wiki/Mutual_information#Normalized_variants)
 between two sets of values using `InformationMeasures.get_mutual_information`.
 """
-Base.@kwdef struct NormalisedMutualInformation <: AbstractCriterion
+Base.@kwdef struct NormalisedMutualInformation <: Criterion
     estimator::String = "shrinkage"
 end
 
@@ -48,7 +48,7 @@ end
 Estimate the [conditional mutual information](https://en.wikipedia.org/wiki/Conditional_mutual_information)
 between two sets of values, conditioned on a third, using `InformationMeasures.get_conditional_mutual_information`.
 """
-Base.@kwdef struct ConditionalMutualInformation <: AbstractCriterion
+Base.@kwdef struct ConditionalMutualInformation <: Criterion
     estimator::String = "shrinkage"
 end
 
@@ -64,7 +64,7 @@ end
 Use [Pearson correlation](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient)
 by calling `cor(x, y)`.
 """
-struct PearsonCorrelation <: AbstractCriterion end
+struct PearsonCorrelation <: Criterion end
 evaluate(criterion::PearsonCorrelation, x, y) = cor(x, y)
 
 """
@@ -73,5 +73,5 @@ evaluate(criterion::PearsonCorrelation, x, y) = cor(x, y)
 Use [Spearman correlation](https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient)
 by calling `corspearman(x, y)`.
 """
-struct SpearmanCorrelation <: AbstractCriterion end
+struct SpearmanCorrelation <: Criterion end
 evaluate(criterion::SpearmanCorrelation, x, y) = corspearman(x, y)

@@ -16,7 +16,7 @@ InformationMeasures = "0.3"
 Missings = "1"
 StatsBase = "0.33"
 Tables = "1"
-julia = "1"
+julia = "1.6"
 
 [extras]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"

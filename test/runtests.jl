@@ -16,7 +16,10 @@ using FeatureRelevance:
     selection,
     report
 
+rng = MersenneTwister(1)
+
 @testset "FeatureRelevance" begin
+    include("algorithms.jl")
     include("criteria.jl")
-    include("feature_selection.jl")
+    include("report.jl")
 end

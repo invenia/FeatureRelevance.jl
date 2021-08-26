@@ -19,7 +19,7 @@ function relevance(criterion, x, y, z...)
     # Early exit if we've filtered out all values
     iszero(count(mask)) && return missing
 
-    # Iterate through and drop missings and
+    # make sure the values are actually different
     args = map((x, y, z...)) do arg
         v = disallowmissing(arg[mask])
         percent_diff = (maximum(v) - minimum(v)) ./ minimum(v)

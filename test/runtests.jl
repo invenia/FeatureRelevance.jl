@@ -13,8 +13,9 @@ using FeatureRelevance:
     NormalisedMutualInformation,
     PearsonCorrelation,
     Top,
-    selection,
-    report
+    relevance,
+    report,
+    selection
 
 rng = MersenneTwister(1)
 

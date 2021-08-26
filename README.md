@@ -5,7 +5,8 @@
 Example usage for different metrics/selection approaches:
 
 ```
-using FeatureRelevance
+using FeatureRelevance: MutualInformation, NormalisedMutualInformation, PearsonCorrelation, SpearmanCorrelation
+using FeatureRelevance: Top, GreedyMRMR, GreedyJMI
 using DataFrames
 
 n = 1000
@@ -17,18 +18,19 @@ source_df[!,:c] = source_df.b .+ 0.1randn(n)
 source_df[!,:d] = source_df.c .+ 0.1randn(n)
 source_df[!,:e] = source_df.d .+ 0.1randn(n)
 
-n_select = 5
+n_select = 3
 
-feat_imp = FeatureRelevance.select(Top(n_select,MutualInformation()), target_df, source_df)
-feat_imp = FeatureRelevance.select(Top(n_select,NormalisedMutualInformation()), target_df, source_df)
-feat_imp = FeatureRelevance.select(Top(n_select,PearsonCorrelation()), target_df, source_df)
-feat_imp = FeatureRelevance.select(Top(n_select,SpearmanCorrelation()), target_df, source_df)
+feat_imp = FeatureRelevance.report(MutualInformation(), Top(n_select), target_df, source_df)
+feat_imp = FeatureRelevance.report(NormalisedMutualInformation(), Top(n_select), target_df, source_df)
+feat_imp = FeatureRelevance.report(PearsonCorrelation(), Top(n_select), target_df, source_df)
+feat_imp = FeatureRelevance.report(SpearmanCorrelation(), Top(n_select), target_df, source_df)
 
-feat_imp = FeatureRelevance.select(GreedyMRMR(n_select), target_df, source_df)
-feat_imp = FeatureRelevance.select(GreedyJMI(n_select), target_df, source_df)
+feat_imp = FeatureRelevance.report(GreedyMRMR(n_select), target_df, source_df)
+feat_imp = FeatureRelevance.report(GreedyJMI(n_select), target_df, source_df)
 
-feat_imp = FeatureRelevance.select(Top(n_select,PredictivePowerScore()), target_df, source_df)
-feat_imp = FeatureRelevance.select(ShapleyValues(), target_df, source_df)
-feat_imp = FeatureRelevance.select(GainImportance(), target_df, source_df)
-feat_imp = FeatureRelevance.select(SplitImportance(), target_df, source_df)
+# to be re-added
+#feat_imp = FeatureRelevance.report(PredictivePowerScore(), Top(n_select), target_df, source_df)
+#feat_imp = FeatureRelevance.report(ShapleyValues(), target_df, source_df)
+#feat_imp = FeatureRelevance.report(GainImportance(), target_df, source_df)
+#feat_imp = FeatureRelevance.report(SplitImportance(), target_df, source_df)
 ```

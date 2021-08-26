@@ -16,4 +16,7 @@ using FeatureRelevance:
     selection,
     report
 
-include("feature_selection.jl")
+@testset "FeatureRelevance" begin
+    include("criteria.jl")
+    include("feature_selection.jl")
+end

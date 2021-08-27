@@ -12,8 +12,18 @@ using FeatureRelevance:
     ConditionalMutualInformation,
     NormalisedMutualInformation,
     PearsonCorrelation,
+    SpearmanCorrelation,
     Top,
-    _select_single_target,
-    select
+    evaluate,
+    relevance,
+    report,
+    selection
 
-include("feature_selection.jl")
+rng = MersenneTwister(1)
+
+@testset "FeatureRelevance" begin
+    include("algorithms.jl")
+    include("criteria.jl")
+    include("relevance.jl")
+    include("report.jl")
+end

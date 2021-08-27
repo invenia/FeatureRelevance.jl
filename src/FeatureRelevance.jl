@@ -1,11 +1,15 @@
 module FeatureRelevance
 
-using DataFrames
 using InformationMeasures
+using Missings
 using Random
 using Statistics
 using StatsBase
+using Tables
 
-include("feature_selection.jl")
+include("criteria.jl")
+include("relevance.jl")
+include("algorithms.jl")
+include("report.jl")
 
 end # module

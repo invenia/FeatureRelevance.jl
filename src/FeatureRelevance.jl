@@ -1,5 +1,6 @@
 module FeatureRelevance
 
+using Distributed
 using InformationMeasures
 using Missings
 using Random

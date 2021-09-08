@@ -31,7 +31,7 @@ function _report(features, targets, args...)
 
     # We use a Channel as a buffer since we don't know how many results to expect.
     results = Channel(; ctype=T, csize=256) do ch
-        for (i, target) in enumerate(_get_columns(y))
+        Threads.@threads for (i, target) in collect(enumerate(_get_columns(y)))
             selected = selection(args..., target, _get_columns(X))
             for (j, score) in zip(selected...)
                 record = (; target=target_names[i], feature=feature_names[j], score=score)

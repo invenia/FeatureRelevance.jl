@@ -29,14 +29,19 @@ function _report(features, targets, args...)
     result_types = Tuple{eltype(target_names),eltype(feature_names),Float64}
     T = NamedTuple{result_names,result_types}
 
-    results = pmap(enumerate(_get_columns(y))) do (i, target)
-        selected = selection(args..., target, _get_columns(X))
-        result = map(zip(selected...)) do (j, score)
-            return (; target=target_names[i], feature=feature_names[j], score=score)
+    # We use a Channel as a buffer since we don't know how many results to expect.
+    results = Channel(; ctype=T, csize=256) do ch
+        Threads.@threads for (i, target) in collect(enumerate(_get_columns(y)))
+            selected = selection(args..., target, _get_columns(X))
+            for (j, score) in zip(selected...)
+                record = (; target=target_names[i], feature=feature_names[j], score=score)
+
+                put!(ch, record)
+            end
         end
     end
 
-    return collect(Iterators.flatten(results))
+    return collect(results)
 end
 
 # Some utility functions for differentiating different inputs

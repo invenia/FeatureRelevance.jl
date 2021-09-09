@@ -97,11 +97,11 @@
     end
 
     @testset "indexing bug (#16)" begin
-        input = rand(12, 5)
+        input = rand(12, 10)
         input[:, 1:2] .= 1.0
         output = rand(12, 2)
 
-        idx, scores = FeatureRelevance.selection(GreedyMRMR(3), output[:, 1], eachcol(input))
-        @test issetequal(idx, [3, 4, 5])
+        idx, scores = FeatureRelevance.selection(GreedyMRMR(8), output[:, 1], eachcol(input))
+        @test isdisjoint(idx, [1, 2])
     end
 end

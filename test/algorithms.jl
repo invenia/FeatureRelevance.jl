@@ -98,15 +98,10 @@
 
     @testset "indexing bug (#16)" begin
         input = rand(12, 5)
-        input[:, 1:2] .= 0.0
+        input[:, 1:2] .= 1.0
         output = rand(12, 2)
 
-        FeatureRelevance.selection(GreedyMRMR(3), output[:, 1], eachcol(input))
+        idx, scores = FeatureRelevance.selection(GreedyMRMR(3), output[:, 1], eachcol(input))
+        @test issetequal(idx, [3, 4, 5])
     end
-
-
-
-
-
-
 end

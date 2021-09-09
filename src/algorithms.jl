@@ -118,33 +118,34 @@ function selection(alg::Greedy, target, features)
     indices = collect(eachindex(X))
     relevances = [relevance(mi, target, f) for f in X]
 
-    # Drop any features that have a `missing` relevance
+    # Note any features that have a `missing` relevance
     mask = map(ismissing, relevances)
-    deleteat!(indices, mask)
-    deleteat!(relevances, mask)
+    missing_indices = indices[mask]
 
     # Running sum of our feature relevances, conditioned and unconditioned on the target
-    m = length(relevances)
-    β_rel = zeros(m)
-    γ_rel = zeros(m)
+    n_features = length(relevances)
+    β_rel = zeros(n_features)
+    γ_rel = zeros(n_features)
 
+    m = sum(.!mask)
     m < n && @warn("Too many relevance scores are missing. Only returning $m")
 
     # Pre-allocate our selected items
     # NOTE: There might be a cleaner iteration algorithm, but reusing pre-allocated
     # redundancy arrays seems important for performance.
-    selected = Vector{Int}(undef, min(n, m))
-    selected_scores = Vector{eltype(relevances)}(undef, min(n, m))
+    selected_indices = Vector{Int}(undef, min(n, m))
+    T = eltype(disallowmissing(relevances[.!mask]))
+    selected_scores = Vector{T}(undef, min(n, m))
     i = 0
     while i < min(n, m)
-        idx = setdiff(indices, selected[1:i])
-        scores = relevances[idx]
+        remaining_indices = setdiff(indices, selected_indices[1:i], missing_indices)
+        remaining_scores = relevances[remaining_indices]
 
         # Only compute redundancy if this isn't our first iteration
         if i > 0
-            prev = X[selected[i]]
+            prev = X[selected_indices[i]]
 
-            for (j, k) in enumerate(idx)
+            for (j, k) in enumerate(remaining_indices)
                 redundancy = 0.0
 
                 if alg.β
@@ -157,15 +158,15 @@ function selection(alg::Greedy, target, features)
                     redundancy -= (1.0 / i) * γ_rel[k]
                 end
 
-                scores[j] -= redundancy
+                remaining_scores[j] -= redundancy
             end
         end
 
-        x, j = findmax(scores)
-        selected[i + 1] = idx[j]
+        x, idx = findmax(remaining_scores)
+        selected_indices[i + 1] = remaining_indices[idx]
         selected_scores[i + 1] = x
         i += 1
     end
 
-    return selected, selected_scores
+    return selected_indices, selected_scores
 end

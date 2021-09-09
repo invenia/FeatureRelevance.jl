@@ -95,4 +95,18 @@
                   1.0 / 2.0 * (cmi[:x1][:x2] + cmi[:x3][:x2])
         end
     end
+
+    @testset "indexing bug (#16)" begin
+        input = rand(12, 5)
+        input[:, 1:2] .= 0.0
+        output = rand(12, 2)
+
+        FeatureRelevance.selection(GreedyMRMR(3), output[:, 1], eachcol(input))
+    end
+
+
+
+
+
+
 end

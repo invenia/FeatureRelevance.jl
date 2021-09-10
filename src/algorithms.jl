@@ -105,11 +105,8 @@ function selection(alg::Greedy, target, features)
     # Since we're gonna need to index into each feature repeatedly we collect the feature
     # vectors (vector of vectors)
     X = collect(features)
-
     alg.n < length(X) ||
         @warn("Requested $(alg.n) out of $(length(X)) features, returning all.")
-
-    n = min(alg.n, length(X))
 
     mi = MutualInformation()
     cmi = ConditionalMutualInformation()
@@ -118,27 +115,27 @@ function selection(alg::Greedy, target, features)
     indices = collect(eachindex(X))
     relevances = [relevance(mi, target, f) for f in X]
 
-    # Note any features that have a `missing` relevance
-    mask = map(ismissing, relevances)
-    missing_indices = indices[mask]
-
     # Running sum of our feature relevances, conditioned and unconditioned on the target
-    n_features = length(relevances)
-    β_rel = zeros(n_features)
-    γ_rel = zeros(n_features)
+    β_rel, γ_rel = (zeros(length(relevances)) for _ in 1:2)
 
-    m = sum(.!mask)
-    m < n && @warn("Too many relevance scores are missing. Only returning $m")
+    # Note any features that have a `missing` relevance and remove those indices
+    # from consideration.
+    mask = map(ismissing, relevances)
+    deleteat!(indices, mask)
+
+    # Determine the number of selected indices and scores we're returning
+    n = min(alg.n, count(!, mask))
+    alg.n <= count(!, mask) || @warn("Too many relevance scores are missing. Returning $n.")
 
     # Pre-allocate our selected items
     # NOTE: There might be a cleaner iteration algorithm, but reusing pre-allocated
     # redundancy arrays seems important for performance.
-    selected_indices = Vector{Int}(undef, min(n, m))
-    T = eltype(disallowmissing(relevances[.!mask]))
-    selected_scores = Vector{T}(undef, min(n, m))
+    selected_indices = Vector{Int}(undef, n)
+    T = nonmissingtype(eltype(relevances))
+    selected_scores = Vector{T}(undef, n)
     i = 0
-    while i < min(n, m)
-        remaining_indices = setdiff(indices, selected_indices[1:i], missing_indices)
+    while i < n
+        remaining_indices = setdiff(indices, selected_indices[1:i])
         remaining_scores = relevances[remaining_indices]
 
         # Only compute redundancy if this isn't our first iteration

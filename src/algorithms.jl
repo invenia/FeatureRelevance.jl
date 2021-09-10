@@ -105,11 +105,8 @@ function selection(alg::Greedy, target, features)
     # Since we're gonna need to index into each feature repeatedly we collect the feature
     # vectors (vector of vectors)
     X = collect(features)
-
     alg.n < length(X) ||
         @warn("Requested $(alg.n) out of $(length(X)) features, returning all.")
-
-    n = min(alg.n, length(X))
 
     mi = MutualInformation()
     cmi = ConditionalMutualInformation()
@@ -118,33 +115,32 @@ function selection(alg::Greedy, target, features)
     indices = collect(eachindex(X))
     relevances = [relevance(mi, target, f) for f in X]
 
-    # Drop any features that have a `missing` relevance
+    # Running sum of our feature relevances, conditioned and unconditioned on the target
+    β_rel, γ_rel = (zeros(length(relevances)) for _ in 1:2)
+
+    # Note any features that have a `missing` relevance and remove those indices
+    # from consideration.
     mask = map(ismissing, relevances)
     deleteat!(indices, mask)
-    deleteat!(relevances, mask)
 
-    # Running sum of our feature relevances, conditioned and unconditioned on the target
-    m = length(relevances)
-    β_rel = zeros(m)
-    γ_rel = zeros(m)
-
-    m < n && @warn("Too many relevance scores are missing. Only returning $m")
+    # Determine the number of selected indices and scores we're returning
+    n = min(alg.n, count(!, mask))
+    alg.n <= count(!, mask) || @warn("Too many relevance scores are missing. Returning $n.")
 
     # Pre-allocate our selected items
     # NOTE: There might be a cleaner iteration algorithm, but reusing pre-allocated
     # redundancy arrays seems important for performance.
-    selected = Vector{Int}(undef, min(n, m))
-    selected_scores = Vector{eltype(relevances)}(undef, min(n, m))
-    i = 0
-    while i < min(n, m)
-        idx = setdiff(indices, selected[1:i])
-        scores = relevances[idx]
+    selected_indices = Vector{Int}(undef, n)
+    selected_scores = Vector{nonmissingtype(eltype(relevances))}(undef, n)
+    for i in 0:n-1
+        remaining_indices = setdiff(indices, selected_indices[1:i])
+        remaining_scores = relevances[remaining_indices]
 
         # Only compute redundancy if this isn't our first iteration
         if i > 0
-            prev = X[selected[i]]
+            prev = X[selected_indices[i]]
 
-            for (j, k) in enumerate(idx)
+            for (j, k) in enumerate(remaining_indices)
                 redundancy = 0.0
 
                 if alg.β
@@ -157,15 +153,14 @@ function selection(alg::Greedy, target, features)
                     redundancy -= (1.0 / i) * γ_rel[k]
                 end
 
-                scores[j] -= redundancy
+                remaining_scores[j] -= redundancy
             end
         end
 
-        x, j = findmax(scores)
-        selected[i + 1] = idx[j]
+        x, idx = findmax(remaining_scores)
+        selected_indices[i + 1] = remaining_indices[idx]
         selected_scores[i + 1] = x
-        i += 1
     end
 
-    return selected, selected_scores
+    return selected_indices, selected_scores
 end

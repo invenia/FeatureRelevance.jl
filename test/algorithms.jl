@@ -95,4 +95,18 @@
                   1.0 / 2.0 * (cmi[:x1][:x2] + cmi[:x3][:x2])
         end
     end
+
+    @testset "indexing bug (#16)" begin
+        input = allowmissing(rand(12, 10))
+        input[:, 1:2] .= 1.0
+        output = rand(12, 2)
+
+        idx, scores = FeatureRelevance.selection(GreedyMRMR(8), output[:, 1], eachcol(input))
+        @test isdisjoint(idx, [1, 2])
+
+        # Test missing input causing relevance to be missing
+        input[:, 1] .= missing
+        idx, scores = FeatureRelevance.selection(GreedyMRMR(8), output[:, 1], eachcol(input))
+        @test isdisjoint(idx, [1, 2])
+    end
 end

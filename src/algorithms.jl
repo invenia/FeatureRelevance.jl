@@ -131,8 +131,7 @@ function selection(alg::Greedy, target, features)
     # NOTE: There might be a cleaner iteration algorithm, but reusing pre-allocated
     # redundancy arrays seems important for performance.
     selected_indices = Vector{Int}(undef, n)
-    T = nonmissingtype(eltype(relevances))
-    selected_scores = Vector{T}(undef, n)
+    selected_scores = Vector{nonmissingtype(eltype(relevances))}(undef, n)
     i = 0
     while i < n
         remaining_indices = setdiff(indices, selected_indices[1:i])

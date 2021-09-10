@@ -132,8 +132,7 @@ function selection(alg::Greedy, target, features)
     # redundancy arrays seems important for performance.
     selected_indices = Vector{Int}(undef, n)
     selected_scores = Vector{nonmissingtype(eltype(relevances))}(undef, n)
-    i = 0
-    while i < n
+    for i in 0:n-1
         remaining_indices = setdiff(indices, selected_indices[1:i])
         remaining_scores = relevances[remaining_indices]
 
@@ -161,7 +160,6 @@ function selection(alg::Greedy, target, features)
         x, idx = findmax(remaining_scores)
         selected_indices[i + 1] = remaining_indices[idx]
         selected_scores[i + 1] = x
-        i += 1
     end
 
     return selected_indices, selected_scores

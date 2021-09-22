@@ -10,7 +10,7 @@ variables:
   platform: "x86_64"  # 64-bit
 
 # If you need to install system packages, such as `unzip`, you can do so as follows:
-#.test:
+# .test:
 #  before_script:
 #    - echo "$ci_init" > ci_init && source ci_init && rm ci_init
-#    - package_install unzip
+#    - package_install libomp

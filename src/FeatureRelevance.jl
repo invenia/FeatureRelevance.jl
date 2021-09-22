@@ -1,8 +1,10 @@
 module FeatureRelevance
 
 using InformationMeasures
+using MLDataPattern
 using Missings
 using Random
+using Requires
 using Statistics
 using StatsBase
 using Tables
@@ -11,5 +13,11 @@ include("criteria.jl")
 include("relevance.jl")
 include("algorithms.jl")
 include("report.jl")
+
+# To avoid bogging down our package with dependencies we use requires to support
+# optional features for now.
+function __init__()
+    @require LightGBM="7acf609c-83a4-11e9-1ffb-b912bcd3b04a" include("lightgbm.jl")
+end
 
 end # module

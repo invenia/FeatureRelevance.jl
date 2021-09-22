@@ -2,10 +2,13 @@
 
 [![Docs: Latest](https://img.shields.io/badge/docs-latest-blue.svg)](http://docs.invenia.ca/invenia/research/FeatureRelevance.jl)
 
-Example usage for different metrics/selection approaches. Start `julia` with `--threads N`
-to utilise multithreading functionality.
 
-```
+## Usage
+
+Using different metrics/selection approaches.
+Start `julia` with `--threads N` to utilise multithreading functionality.
+
+```julia
 using FeatureRelevance: MutualInformation, NormalisedMutualInformation, PearsonCorrelation, SpearmanCorrelation
 using FeatureRelevance: Top, GreedyMRMR, GreedyJMI
 using DataFrames
@@ -28,10 +31,37 @@ feat_imp = FeatureRelevance.report(SpearmanCorrelation(), Top(n_select), target_
 
 feat_imp = FeatureRelevance.report(GreedyMRMR(n_select), target_df, source_df)
 feat_imp = FeatureRelevance.report(GreedyJMI(n_select), target_df, source_df)
+```
 
-# to be re-added
-#feat_imp = FeatureRelevance.report(PredictivePowerScore(), Top(n_select), target_df, source_df)
-#feat_imp = FeatureRelevance.report(ShapleyValues(), target_df, source_df)
-#feat_imp = FeatureRelevance.report(GainImportance(), target_df, source_df)
-#feat_imp = FeatureRelevance.report(SplitImportance(), target_df, source_df)
+## Experimental
+
+Some functionality requires having LightGBM.jl installed and loaded.
+
+```julia
+using Pkg; Pkg.add("LightGBM")
+```
+
+**WARNING** On `macos` you'll also need to manually install the `libomp` binary
+dependency in your shell.
+
+```sh
+brew install libomp
+```
+
+In the future, BinaryBuilder and BinaryProvider should be able to handle this for us [[1]](https://github.com/IQVIA-ML/LightGBM.jl/issues/112).
+
+```julia
+using LightGBM
+using FeatureRelevance: PredictivePowerScore
+
+feat_imp = FeatureRelevance.report(PredictivePowerScore(), Top(n_select), target_df, source_df)
+```
+
+
+## Future
+
+```julia
+feat_imp = FeatureRelevance.report(ShapleyValues(), target_df, source_df)
+feat_imp = FeatureRelevance.report(GainImportance(), target_df, source_df)
+feat_imp = FeatureRelevance.report(SplitImportance(), target_df, source_df)
 ```

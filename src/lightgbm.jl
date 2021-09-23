@@ -1,4 +1,4 @@
-# Contains all our features which depend on LightGBM.
+# Contains all package features which depend on LightGBM.
 # Since that package requires manually installing the lightgbm binary dependency and
 # several MLJ packages we're keeping this as an optional dependency for now.
 # https://gitlab.invenia.ca/invenia/research/FeatureRelevance.jl/-/issues/6
@@ -9,6 +9,9 @@ using .LightGBM
 
 Estimate the [predictive power score](https://towardsdatascience.com/rip-correlation-introducing-the-predictive-power-score-3d90808b9598)
 between two sets of values using a `LightGBM.LGBMRegression` model and `median` naive estimators.
+Note that categorical variables are not currently supported.
+
+- `k` is the number of folds used in the decision tree training.
 """
 Base.@kwdef struct PredictivePowerScore <: Criterion
     k::Int = 4
@@ -38,5 +41,5 @@ function evaluate(criterion::PredictivePowerScore, x, y)
     model_mae = model_ae / n
     naive_mae = naive_ae / n
 
-    return model_mae > naive_mae ? 0 : 1 - (model_mae / naive_mae)
+    return model_mae > naive_mae ? 0.0 : 1 - (model_mae / naive_mae)
 end

@@ -17,7 +17,9 @@ using FeatureRelevance: PredictivePowerScore
 
         # PPS score for X predicting y should be over 0.5
         @test pps(X, y) > 0.5
-        # But the score for y predicting X should be similar to pearson correlation
+        # But the score for y predicting X should be close to zero, since the mean of the
+        # conditional distribution `P(y|X)` (this is essentially what is predicted by the
+        # underlying regressor) is invariant in `X` 
         @test pps(y, X) < 0.1
     end
 end

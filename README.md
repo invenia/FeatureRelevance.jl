@@ -58,7 +58,7 @@ feat_imp = FeatureRelevance.report(PredictivePowerScore(), Top(n_select), target
 ```
 
 
-## Future
+## Future (to be added)
 
 ```julia
 feat_imp = FeatureRelevance.report(ShapleyValues(), target_df, source_df)

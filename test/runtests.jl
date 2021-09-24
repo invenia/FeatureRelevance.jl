@@ -26,4 +26,7 @@ rng = MersenneTwister(1)
     include("criteria.jl")
     include("relevance.jl")
     include("report.jl")
+
+    # Only run LightGBM tests on linux by default
+    Sys.islinux() && include("lightgbm.jl")
 end

@@ -56,7 +56,8 @@ the features using [`LGBM_BoosterFeatureImportance`](https://lightgbm.readthedoc
 # Arguments
 
 - `importance_type::Symbol`: Whether to use `:gain` or `:split` importance scoring.
-- `iterations=0`: Maximum number of iterations/boosting to consider.
+- `iterations=0`: Maximum number of iterations/boosting to consider. The default
+value of 0 means that a single decision tree is used.
 """
 Base.@kwdef struct RandomForest <: Algorithm
     importance_type::Symbol

@@ -1,6 +1,6 @@
 using LightGBM
 
-using FeatureRelevance: PredictivePowerScore, RandomForest, GainImportance, SplitImportance
+using FeatureRelevance: PredictivePowerScore, GradientBoostedImportance, GainImportance, SplitImportance
 
 @testset "lightgbm.jl" begin
     @testset "PredictivePowerScore" begin
@@ -23,7 +23,7 @@ using FeatureRelevance: PredictivePowerScore, RandomForest, GainImportance, Spli
         @test pps(y, X) < 0.1
     end
 
-    @testset "RandomForest" begin
+    @testset "GradientBoostedImportance" begin
         X = rand(-2.0:0.1:2.0, 1000)
         df = DataFrame(
             :x1 => X,
@@ -44,7 +44,8 @@ using FeatureRelevance: PredictivePowerScore, RandomForest, GainImportance, Spli
         end
 
         # Test that this also works with `report`
-        r = DataFrame(report(RandomForest(:gain), df[:, [:target]], df[:, [:x2, :x3]]))
+        alg = GradientBoostedImportance(:gain)
+        r = DataFrame(report(alg, df[:, [:target]], df[:, [:x2, :x3]]))
         f, scores = r[:, :feature], r[:, :score]
         @test f == [:x2, :x3]
         @test scores[1] > scores[2]

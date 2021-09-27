@@ -48,7 +48,7 @@ function evaluate(criterion::PredictivePowerScore, x::Matrix{<:Real}, y::Vector{
 end
 
 """
-    RandomForest(; importance_type, iterations=0)
+    GradientBoostedImportance(; importance_type, iterations=0)
 
 Fits a `LighGBM.LGBMRegression` estimator to a given set of features / targets, and scores
 the features using [`LGBM_BoosterFeatureImportance`](https://lightgbm.readthedocs.io/en/latest/C-API.html?highlight=gain#c.LGBM_BoosterFeatureImportance).
@@ -59,11 +59,11 @@ the features using [`LGBM_BoosterFeatureImportance`](https://lightgbm.readthedoc
 - `iterations=0`: Maximum number of iterations/boosting to consider. The default
 value of 0 means that a single decision tree is used.
 """
-Base.@kwdef struct RandomForest <: Algorithm
+Base.@kwdef struct GradientBoostedImportance <: Algorithm
     importance_type::Symbol
     iterations::UInt = 0
 
-    function RandomForest(importance_type::Symbol, iterations=0)
+    function GradientBoostedImportance(importance_type::Symbol, iterations=0)
         # This seemed simpler than an enum type or multiple wrappers
         if importance_type ∉ (:split, :gain)
             throw(ArgumentError("Supported importance types are :split or :gain"))
@@ -73,16 +73,20 @@ Base.@kwdef struct RandomForest <: Algorithm
     end
 end
 
-GainImportance(; iterations=0) = RandomForest(:gain, iterations)
-SplitImportance(; iterations=0) = RandomForest(:split, iterations)
+GainImportance(; iterations=0) = GradientBoostedImportance(:gain, iterations)
+SplitImportance(; iterations=0) = GradientBoostedImportance(:split, iterations)
 
-function selection(alg::RandomForest, target, features)
+function selection(alg::GradientBoostedImportance, target, features)
     # NOTE: If we have more than 1 target column LightGBM will error with a
     # size mismatch error.
     return selection(alg, vec(_to_real_array(target)), _to_real_array(features))
 end
 
-function selection(alg::RandomForest, target::Vector{<:Real}, features::Matrix{<:Real})
+function selection(
+    alg::GradientBoostedImportance,
+    target::Vector{<:Real},
+    features::Matrix{<:Real},
+)
     estimator = LGBMRegression()
     LightGBM.fit!(estimator, features, target)
 

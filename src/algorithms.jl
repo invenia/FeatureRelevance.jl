@@ -33,20 +33,26 @@ This is fast but might result in redundant features.
 Mutual information maximisation (MIM).
 
 # Arguments
-- `n`: Number of most relevant features to select
+- `n`: Number of most relevant features to select (`Inf` for all features)
 """
 Base.@kwdef struct Top <: Algorithm
-    n::Int
+    n::Real
 end
+
+# Constant for selection all features
+const ALL = Top(Inf)
 
 selection(top::Top, args...) = selection(MutualInformation(), top, args...)
 
 function selection(criterion, alg::Top, target, features)
-    # If N is too large, just return all features
-    alg.n < length(features) ||
-        @warn("Requested $(alg.n) out of $(length(features)) features, returning all.")
+    # Early exit condition.
+    # Could be moved to a constructor
+    if isnan(alg.n) || alg.n <= 0
+        throw(ArgumentError("Requested invalid number of features ($(alg.n))"))
+    end
 
-    n = min(alg.n, length(features))
+    n::Int = min(alg.n, length(features))
+    n == length(features) || @debug("Requested $(alg.n) out of $(length(features)) features, returning all.")
 
     # Calculate our relevance stats
     stats = [relevance(criterion, target, f) for f in features]
@@ -105,8 +111,9 @@ function selection(alg::Greedy, target, features)
     # Since we're gonna need to index into each feature repeatedly we collect the feature
     # vectors (vector of vectors)
     X = collect(features)
-    alg.n < length(X) ||
-        @warn("Requested $(alg.n) out of $(length(X)) features, returning all.")
+    if alg.n > length(X)
+        @debug("Requested $(alg.n) out of $(length(X)) features, returning all.")
+    end
 
     mi = MutualInformation()
     cmi = ConditionalMutualInformation()

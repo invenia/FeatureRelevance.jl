@@ -33,26 +33,28 @@ This is fast but might result in redundant features.
 Mutual information maximisation (MIM).
 
 # Arguments
-- `n`: Number of most relevant features to select (`Inf` for all features)
+- `n`: A positive values indicates the number of most relevant features to select.
+       Non-positive values indicate the number of least relevant features to drop.
 """
 Base.@kwdef struct Top <: Algorithm
-    n::Real
+    n::Int
 end
 
 # Constant for selection all features
-const ALL = Top(Inf)
+const ALL = Top(0)
 
 selection(top::Top, args...) = selection(MutualInformation(), top, args...)
 
 function selection(criterion, alg::Top, target, features)
-    # Early exit condition.
-    # Could be moved to a constructor
-    if isnan(alg.n) || alg.n <= 0
-        throw(ArgumentError("Requested invalid number of features ($(alg.n))"))
+    nfeatures = length(features)
+    n = if alg.n <= 0
+        nfeatures - alg.n
+    elseif 0 < alg.n <= nfeatures
+        alg.n
+    else
+        @debug("Requested $(alg.n) out of $nfeatures features, returning all.")
+        nfeatures
     end
-
-    n::Int = min(alg.n, length(features))
-    n == length(features) || @debug("Requested $(alg.n) out of $(length(features)) features, returning all.")
 
     # Calculate our relevance stats
     stats = [relevance(criterion, target, f) for f in features]

@@ -1,12 +1,15 @@
 """
-    report([criterion,] alg, targets, features)
+    report(alg, targets, features)
+    report(criterion, targets, features)
+    report(criterion, alg, targets, features)
 
 For each column in `targets`, use method `alg` to select features from among the columns
 of `features`.
 
 # Arguments
 - `criterion`: Optional criterion to use with the provide `alg` (not supported by some algs)
-- `alg`: The algorithm to use for selecting relevant `features` for each `target`
+- `alg`: The algorithm to use for selecting relevant `features` for each `target`.
+         If only `criterion` is specified then this assumed to be `Top(Inf)`.
 - `targets`: A table or matrix for 1 or more target values
 - `features`: A table or matrix for 1 or more features
 
@@ -15,6 +18,7 @@ of `features`.
   `:target`, `:feature` and `:score`.
 """
 report(alg::Algorithm, targets, features) = _report(features, targets, alg)
+report(criterion::Criterion, targets, features) = report(criterion, ALL, targets, features)
 function report(criterion, alg::Algorithm, targets, features)
     return _report(features, targets, criterion, alg)
 end

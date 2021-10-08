@@ -7,6 +7,12 @@
         @test size(m) == (2, 3) # (nselect, 3)
         @test propertynames(m) == [:target, :feature, :score]
         @test count(r -> r === :t1, m.target) == 2
+
+        m = DataFrame(report(PearsonCorrelation(), targets, features))
+        @test size(m) == (10, 3) # (ALL, 3)
+        @test propertynames(m) == [:target, :feature, :score]
+        @test count(r -> r === :t1, m.target) == 10
+
     end
 
     @testset "multiple targets" begin
@@ -18,6 +24,12 @@
         @test propertynames(m) == [:target, :feature, :score]
         @test issetequal(m.target, propertynames(targets))
         @test count(r -> r === :t1, m.target) == 2
+
+        m = DataFrame(report(PearsonCorrelation(), targets, features))
+        @test size(m) == (20, 3) # (ntargets x ALL, 3)
+        @test propertynames(m) == [:target, :feature, :score]
+        @test issetequal(m.target, propertynames(targets))
+        @test count(r -> r === :t1, m.target) == 10
     end
 
     @testset "$matvec inputs" for (matvec, data) in (

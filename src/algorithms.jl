@@ -68,7 +68,7 @@ function selection(criterion, alg::Top, target, features)
     # Take at most n of the highest values
     idx = collect(Iterators.take(filtered, n))
 
-    @assert length(idx) == n "Too few features selected ($(length(idx))), expected $n."
+    length(idx) == n || @debug "Too few features selected ($(length(idx))), expected $n."
     return idx, stats[idx]
 end
 

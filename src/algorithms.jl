@@ -68,7 +68,7 @@ function selection(criterion, alg::Top, target, features)
     # Take at most n of the highest values
     idx = collect(Iterators.take(filtered, n))
 
-    length(idx) == n || @debug "Too few features selected ($(length(idx))), expected $n."
+    length(idx) == n || @debug "Too few features selected ($(length(idx))), expected $n. Probably due to the relevance score being missing for certain feature target paris."
     return idx, stats[idx]
 end
 

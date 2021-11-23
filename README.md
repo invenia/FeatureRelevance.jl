@@ -52,9 +52,11 @@ In the future, BinaryBuilder and BinaryProvider should be able to handle this fo
 
 ```julia
 using LightGBM
-using FeatureRelevance: PredictivePowerScore
+using FeatureRelevance: PredictivePowerScore, GainImportance, SplitImportance
 
 feat_imp = FeatureRelevance.report(PredictivePowerScore(), Top(n_select), target_df, source_df)
+feat_imp = FeatureRelevance.report(GainImportance(), target_df, source_df)
+feat_imp = FeatureRelevance.report(SplitImportance(), target_df, source_df)
 ```
 
 
@@ -62,6 +64,4 @@ feat_imp = FeatureRelevance.report(PredictivePowerScore(), Top(n_select), target
 
 ```julia
 feat_imp = FeatureRelevance.report(ShapleyValues(), target_df, source_df)
-feat_imp = FeatureRelevance.report(GainImportance(), target_df, source_df)
-feat_imp = FeatureRelevance.report(SplitImportance(), target_df, source_df)
 ```

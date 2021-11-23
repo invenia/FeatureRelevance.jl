@@ -9,9 +9,10 @@ using Statistics
 using StatsBase
 using Tables
 
-include("criteria.jl")
-include("relevance.jl")
 include("algorithms.jl")
+include("criteria.jl")
+include("preprocess.jl")
+include("relevance.jl")
 include("report.jl")
 
 # To avoid bogging down our package with dependencies we use requires to support

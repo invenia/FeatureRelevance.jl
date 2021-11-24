@@ -14,8 +14,18 @@
         @test evaluate(criterion, x, y1) == criterion(x, y1)
     end
 
-    criterion = ConditionalMutualInformation()
-    z = y1
-    @test criterion(x, y2, z) > criterion(x, y1, z)
-    @test evaluate(criterion, x, y1, z) == criterion(x, y1, z)
+    @testset "RatioToShuffled()" begin
+        criterion = RatioToShuffled(MutualInformation())
+        @test criterion(x, y1) > criterion(x, y2)
+        @test evaluate(criterion, x, y1) == criterion(x, y1)
+
+        @test 0.9 < criterion(x, rand(size(x))) < 1.1
+    end
+
+    @testset "ConditionalMutualInformation()" begin
+        criterion = ConditionalMutualInformation()
+        z = y1
+        @test criterion(x, y2, z) > criterion(x, y1, z)
+        @test evaluate(criterion, x, y1, z) == criterion(x, y1, z)
+    end
 end

@@ -75,3 +75,18 @@ by calling `corspearman(x, y)`.
 """
 struct SpearmanCorrelation <: Criterion end
 evaluate(criterion::SpearmanCorrelation, x, y) = corspearman(x, y)
+
+"""
+    RatioToShuffled(criterion::Criterion)
+
+Compute the ratio of the `criterion(x, y)` and `criterion(x, shuffle(y))`, softened by the
+stabiliser.
+"""
+struct RatioToShuffled <: Criterion
+    criterion
+end
+function evaluate(criterion::RatioToShuffled, x, y, stabiliser=0.01)
+    real = criterion.criterion(x, y) + stabiliser
+    shuffled = criterion.criterion(x, shuffle(y)) + stabiliser
+    return real / shuffled
+end

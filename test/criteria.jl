@@ -1,8 +1,8 @@
 @testset "criteria.jl" begin
 
-    x = rand(100)
-    y1 = x + 0.1*rand(100)
-    y2 = x + 0.2*rand(100)
+    x = rand(1000)
+    y1 = x + 0.1*rand(1000)
+    y2 = x + 0.2*rand(1000)
 
     for criterion in (
         MutualInformation(),
@@ -17,9 +17,8 @@
     @testset "RatioToShuffled()" begin
         criterion = RatioToShuffled(MutualInformation())
         @test criterion(x, y1) > criterion(x, y2)
-        @test evaluate(criterion, x, y1) == criterion(x, y1)
 
-        @test 0.9 < criterion(x, rand(size(x))) < 1.1
+        @test 0.9 < criterion(x, rand(size(x)...)) < 1.1
     end
 
     @testset "ConditionalMutualInformation()" begin

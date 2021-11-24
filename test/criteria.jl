@@ -1,8 +1,8 @@
 @testset "criteria.jl" begin
 
-    x = rand(1000)
-    y1 = x + 0.1*rand(1000)
-    y2 = x + 0.2*rand(1000)
+    x = rand(10000)
+    y1 = x + 0.1*rand(10000)
+    y2 = x + 0.2*rand(10000)
 
     for criterion in (
         MutualInformation(),

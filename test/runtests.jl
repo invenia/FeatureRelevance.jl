@@ -12,6 +12,7 @@ using FeatureRelevance:
     ConditionalMutualInformation,
     NormalisedMutualInformation,
     PearsonCorrelation,
+    RatioToShuffled,
     SpearmanCorrelation,
     Top,
     evaluate,

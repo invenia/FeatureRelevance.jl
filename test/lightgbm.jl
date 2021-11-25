@@ -24,7 +24,7 @@ using FeatureRelevance: PredictivePowerScore, GradientBoostedImportance, GainImp
     end
 
     @testset "GradientBoostedImportance" begin
-        X = rand(-2.0:0.1:2.0, 1000)
+        X = rand(-2.0:0.1:2.0, 10000)
         df = DataFrame(
             :x1 => X,
             :x2 => [x + rand(-0.5:0.1:0.5) for x in X],

@@ -1,6 +1,8 @@
+using AxisKeys
 using DataFrames
 using FeatureRelevance
 using InformationMeasures
+using NamedDims
 using Random
 using Statistics
 using Test
@@ -31,5 +33,6 @@ rng = MersenneTwister(1)
     include("report.jl")
 
     # Only run LightGBM tests on linux by default
-    Sys.islinux() && include("lightgbm.jl")
+    # Sys.islinux() &&
+    include("lightgbm.jl")
 end

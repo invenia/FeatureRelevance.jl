@@ -1,6 +1,6 @@
 name = "FeatureRelevance"
 uuid = "040f642a-ad44-44b2-91d4-df3a5c5fa484"
-version = "0.1.6"
+version = "0.1.7"
 
 [deps]
 InformationMeasures = "96684042-fbdc-5399-9b8e-d34e539a126c"
@@ -13,6 +13,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 
 [compat]
+AxisKeys = "0.1"
 DataFrames = "1"
 InformationMeasures = "0.3"
 LightGBM = "0.5"
@@ -24,9 +25,10 @@ Tables = "1"
 julia = "1.6"
 
 [extras]
+AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 LightGBM = "7acf609c-83a4-11e9-1ffb-b912bcd3b04a"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "DataFrames", "LightGBM"]
+test = ["AxisKeys", "Test", "DataFrames", "LightGBM"]

@@ -73,7 +73,7 @@ function selection(criterion, alg::Top, target, features)
 end
 
 """
-    Greedy(; n, β=true, γ=false)
+    Greedy(; n, β=true, γ=false, positive=false)
 
 Select according to a greedy strategy. This is based on [1] equation 17/18.
 
@@ -81,33 +81,35 @@ Select according to a greedy strategy. This is based on [1] equation 17/18.
 - `n`: Number of relevant features to select
 - `β`: Whether to use `β` to MRMR from [1]
 - `γ`: Whether to use `γ` to JMI from [1]
+- `positive`: Only return positive scores (ie: score > redundancy)
 
 [1] Brown et al., 2012. Conditional Likelihood Maximisation: A Unifying Framework for
 Information Theoretic Feature Selection, JMLR 13.
 """
 Base.@kwdef struct Greedy <: Algorithm
     n::Int
-    β::Bool = true
-    γ::Bool = false
+    β::Bool=true
+    γ::Bool=false
+    positive::Bool=false
 end
 
 """
-    GreedyMRMR(; n)
+    GreedyMRMR(n; positive=false)
 
 Greedy selection taking into account pairwise dependence of features, but assuming pairwise
 class-condtional independence.
 Maximum relevancy minimum redundancy (MRMR).
 """
-GreedyMRMR(n) = Greedy(; n=n, β=true, γ=false)
+GreedyMRMR(n; kwargs...) = Greedy(; n=n, β=true, γ=false, kwargs...)
 
 """
-    GreedyJMI(; n)
+    GreedyJMI(n; positive=false)
 
 Greedy selection taking into account pairwise dependence of features, and also taking into
 account pairwise class-condtional dependence.
 Joint mutual information (JMI).
 """
-GreedyJMI(n) = Greedy(; n=n, β=true, γ=true)
+GreedyJMI(n; kwargs...) = Greedy(; n=n, β=true, γ=true, kwargs...)
 
 function selection(alg::Greedy, target, features)
     # Since we're gonna need to index into each feature repeatedly we collect the feature
@@ -169,6 +171,13 @@ function selection(alg::Greedy, target, features)
         x, idx = findmax(remaining_scores)
         selected_indices[i + 1] = remaining_indices[idx]
         selected_scores[i + 1] = x
+    end
+
+    if alg.positive
+        pos_idx = findall(>(0.0), selected_scores)
+        if length(pos_idx) < length(selected_scores)
+            return selected_indices[pos_idx], selected_scores[pos_idx]
+        end
     end
 
     return selected_indices, selected_scores

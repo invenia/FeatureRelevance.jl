@@ -2,7 +2,6 @@ using AxisKeys
 using DataFrames
 using FeatureRelevance
 using InformationMeasures
-using NamedDims
 using Random
 using Statistics
 using Test

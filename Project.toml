@@ -19,7 +19,6 @@ InformationMeasures = "0.3"
 LightGBM = "0.5"
 MLDataPattern = "0.5"
 Missings = "1"
-NamedDims = "0.2"
 Requires = "1"
 StatsBase = "0.33"
 Tables = "1"
@@ -29,8 +28,7 @@ julia = "1.6"
 AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 LightGBM = "7acf609c-83a4-11e9-1ffb-b912bcd3b04a"
-NamedDims = "356022a1-0364-5f58-8944-0da4b18d706f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["AxisKeys", "Test", "DataFrames", "LightGBM", "NamedDims"]
+test = ["AxisKeys", "Test", "DataFrames", "LightGBM"]

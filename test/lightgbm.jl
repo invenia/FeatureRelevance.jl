@@ -50,9 +50,9 @@ using FeatureRelevance: PredictivePowerScore, GradientBoostedImportance, GainImp
         @test f == [:x2, :x3]
         @test scores[1] > scores[2]
 
-        @test_throws TaskFailedException report(
-            alg, df.target, Tables.matrix(df[:, [:x1, :x2]])
-        )
+        # Test with array inputs
+        r2 = report(alg, df.target, Tables.matrix(df[:, [:x2, :x3]]))
+        @test DataFrame(r2).score == r.score
     end
 
     @testset "_to_real_array" begin
@@ -68,12 +68,13 @@ using FeatureRelevance: PredictivePowerScore, GradientBoostedImportance, GainImp
             :x3 => X[:, 3],
         )
         sa = view(X, 1:10000, 1:3)
-        sa2 = view(X, 1:10000, 1:2)
+        sa2 = view(X, 1:10000, 2)
         ka = wrapdims(X; r=1:10000, c=[:x1, :x2, :x2])
 
         @test FeatureRelevance._to_real_array(df) == X          # Table
         @test FeatureRelevance._to_real_array(sa) == X          # SubArray
+        @test FeatureRelevance._to_real_array(sa2) == reshape(X[1:10000, 2], 10000, 1)
         @test FeatureRelevance._to_real_array(ka) == X          # KeyedArray
-        @test_throws MethodError FeatureRelevance._to_real_array(eachcol(X))  # Generator
+        @test FeatureRelevance._to_real_array(eachcol(X)) == X  # Generator
     end
 end

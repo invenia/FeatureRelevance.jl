@@ -1,9 +1,11 @@
 module FeatureRelevance
 
+using DataFrames
 using InformationMeasures
 using MLDataPattern
 using Missings
 using Random
+using RecipesBase
 using Requires
 using Statistics
 using StatsBase
@@ -11,6 +13,7 @@ using Tables
 
 include("algorithms.jl")
 include("criteria.jl")
+include("plotting.jl")
 include("preprocess.jl")
 include("relevance.jl")
 include("report.jl")

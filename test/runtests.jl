@@ -1,6 +1,7 @@
 using DataFrames
 using FeatureRelevance
 using InformationMeasures
+using Plots
 using Random
 using Statistics
 using Test

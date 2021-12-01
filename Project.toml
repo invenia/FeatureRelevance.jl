@@ -1,6 +1,6 @@
 name = "FeatureRelevance"
 uuid = "040f642a-ad44-44b2-91d4-df3a5c5fa484"
-version = "0.1.7"
+version = "0.1.8"
 
 [deps]
 InformationMeasures = "96684042-fbdc-5399-9b8e-d34e539a126c"

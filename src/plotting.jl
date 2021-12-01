@@ -15,15 +15,15 @@ function binned_df(xs, ys, nbins)
     return bin_df
 end
 
-@userplot VisualiseFeature
+@userplot BinnedMeanAndStd
 
 # NB: bins not nbins (https://github.com/JuliaPlots/RecipesBase.jl/issues/86)
-@recipe function f(b::VisualiseFeature; bins=10)
+@recipe function f(b::BinnedMeanAndStd; bins=10, ylim=:auto)
 
     # check and extract args
     if length(b.args) != 2 || !(typeof(b.args[1]) <: AbstractVector) ||
         !(typeof(b.args[2]) <: AbstractVector)
-        error("visualisefeature should be given two vectors. Got: $(typeof(bargs))")
+        error("binnedmeanandstd should be given two vectors. Got: $(typeof(bargs))")
     end
     xs, ys = b.args
 
@@ -32,13 +32,13 @@ end
     bin_df_shuffle = binned_df(xs, shuffle(ys), bins)
 
     # common settings
-    legend := true
     ymin = quantile(bin_df.ys_mean - bin_df.ys_std, 0.1)
     ymax = quantile(bin_df.ys_mean + bin_df.ys_std, 0.9)
     yrange = ymax - ymin
     ylim := (ymin - 0.4 * yrange, ymax + 0.4 * yrange)
-    ylabel --> "price"
-    xlabel --> "feature"
+    legend := true
+    ylabel := "price"
+    xlabel := "feature"
 
     # data
     @series begin

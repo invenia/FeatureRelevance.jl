@@ -26,6 +26,7 @@ rng = MersenneTwister(1)
 @testset "FeatureRelevance" begin
     include("algorithms.jl")
     include("criteria.jl")
+    include("plotting.jl")
     include("preprocess.jl")
     include("relevance.jl")
     include("report.jl")

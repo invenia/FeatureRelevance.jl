@@ -80,5 +80,6 @@ end
         alpha := 0.35
         bin_df_shuffle.xs, bin_df_shuffle.ys_mean - bin_df_shuffle.ys_std
     end
+    return nothing
 end
 

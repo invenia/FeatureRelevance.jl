@@ -73,7 +73,7 @@ function selection(criterion, alg::Top, target, features)
 end
 
 """
-    Greedy(; n, β=true, γ=false, positive=false)
+    Greedy(n; β=true, γ=false, positive=false)
 
 Select according to a greedy strategy. This is based on [1] equation 17/18.
 
@@ -97,10 +97,10 @@ end
     GreedyMRMR(n; positive=false)
 
 Greedy selection taking into account pairwise dependence of features, but assuming pairwise
-class-condtional independence.
+class-conditional independence.
 Maximum relevancy minimum redundancy (MRMR).
 """
-GreedyMRMR(n; kwargs...) = Greedy(; n=n, β=true, γ=false, kwargs...)
+GreedyMRMR(n; positive=false) = Greedy(; n=n, β=true, γ=false, positive=positive)
 
 """
     GreedyJMI(n; positive=false)

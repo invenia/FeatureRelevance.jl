@@ -83,7 +83,7 @@
             @test scores[3] ≈ mi[:target][:x2] - 1.0 / 2.0 * (mi[:x1][:x2] + mi[:x3][:x2])
             m2 = DataFrame(report(GreedyMRMR(3; positive=true), targets, features))
             @test m2.feature == [:x1, :x2]
-            @test m2.score ≈ scores[[1, 3]]
+            @test m2.score ≈ scores[[1, 3]]  # test `positive=true` drops negative x3 score
         end
 
         @testset "GreedyJMI" begin

@@ -49,5 +49,32 @@ using FeatureRelevance: PredictivePowerScore, GradientBoostedImportance, GainImp
         f, scores = r[:, :feature], r[:, :score]
         @test f == [:x2, :x3]
         @test scores[1] > scores[2]
+
+        # Test with array inputs
+        r2 = report(alg, df.target, Tables.matrix(df[:, [:x2, :x3]]))
+        @test DataFrame(r2).score == r.score
+    end
+
+    @testset "_to_real_array" begin
+        X = hcat(
+            rand(-2.0:0.1:2.0, 10000),
+            rand(-0.5:0.1:0.5, 10000),
+            rand(5.0:0.5:100.0, 10000),
+        )
+
+        df = DataFrame(
+            :x1 => X[:, 1],
+            :x2 => X[:, 2],
+            :x3 => X[:, 3],
+        )
+        sa = view(X, 1:10000, 1:3)
+        sa2 = view(X, 1:10000, 2)
+        ka = wrapdims(X; r=1:10000, c=[:x1, :x2, :x2])
+
+        @test FeatureRelevance._to_real_array(df) == X          # Table
+        @test FeatureRelevance._to_real_array(sa) == X          # SubArray
+        @test FeatureRelevance._to_real_array(sa2) == reshape(X[1:10000, 2], 10000, 1)
+        @test FeatureRelevance._to_real_array(ka) == X          # KeyedArray
+        @test FeatureRelevance._to_real_array(eachcol(X)) == X  # Generator
     end
 end

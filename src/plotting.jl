@@ -46,7 +46,7 @@ end
     @series begin
         label := "data"
         markercolor := :orange
-        alpha := 0.2
+        alpha := 0.1
         seriestype := :scatter
         xs, ys
     end
@@ -56,6 +56,8 @@ end
         label := "mean"
         seriestype := :line
         linecolor := :orange
+        linewidth := 3
+        alpha := 1.0
         bin_df.xs, bin_df.ys_mean
     end
     @series begin
@@ -72,6 +74,7 @@ end
         label := "shuffled"
         seriestype := :line
         linecolor := :gray
+        alpha := 1.0
         bin_df_shuffle.xs, bin_df_shuffle.ys_mean
     end
     @series begin

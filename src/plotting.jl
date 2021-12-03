@@ -4,7 +4,7 @@ function binned_df(xs, ys, nbins)
     edges = quantile(sort(xs), quantiles)
     bin_indices = [findlast(edge -> edge <= x, edges) for x in xs]
     # push the highest value from overflow to last bin
-    bin_indices[findfirst(==(nbins+1), bin_indices)] = nbins
+    bin_indices[findall(==(nbins+1), bin_indices)] .= nbins
 
     # compute the means and stds per bin
     df = DataFrame(; xs, ys, bin_indices)

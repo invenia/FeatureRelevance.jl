@@ -2,9 +2,11 @@ function binned_df(xs, ys, nbins)
     # compute the bin indices
     quantiles = 0.0:1.0/nbins:1.0
     edges = quantile(sort(xs), quantiles)
+    edges = unique(edges) # in case there are repeated values and some edges are the same
+    nbins_left = length(edges) - 1 # number of bins left after removing zero width bins
     bin_indices = [findlast(edge -> edge <= x, edges) for x in xs]
-    # push the highest value from overflow to last bin
-    bin_indices[findall(==(nbins+1), bin_indices)] .= nbins
+    # push the highest value from overflow bin to last bin
+    bin_indices[findall(==(nbins_left+1), bin_indices)] .= nbins_left
 
     # compute the means and stds per bin
     df = DataFrame(; xs, ys, bin_indices)

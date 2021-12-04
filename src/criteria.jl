@@ -90,3 +90,24 @@ function evaluate(criterion::RatioToShuffled, x, y, stabiliser=0.01)
     shuffled = criterion.criterion(x, shuffle(y)) + stabiliser
     return real / shuffled
 end
+
+"""
+    RatioToLagged(criterion::Criterion; offset::Int=24)
+
+Compute the ratio of `criterion(x[offset:end], y[offset:end])` and
+`criterion(y[1:end-offset], y[offset:end])`.
+"""
+struct RatioToLagged <: Criterion
+    criterion::Criterion
+    offset::Int
+end
+
+RatioToLagged(criterion::Criterion; offset=24) = RatioToLagged(criterion, offset)
+
+function evaluate(criterion::RatioToLagged, x, y)
+    idx = criterion.offset:length(x)
+    lag_idx = 1:length(x)-criterion.offset
+    real = criterion.criterion(x[idx], y[idx])
+    lagged = criterion.criterion(y[lag_idx], y[idx])
+    return real / lagged
+end

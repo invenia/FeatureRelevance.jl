@@ -15,6 +15,7 @@ using FeatureRelevance:
     NormalisedMutualInformation,
     PearsonCorrelation,
     RatioToShuffled,
+    RatioToLagged,
     SpearmanCorrelation,
     Top,
     evaluate,

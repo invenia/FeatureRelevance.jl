@@ -20,7 +20,7 @@
     end
 
     @testset "multiple zero-width bins" begin
-        xs = vcat(rand(5), fill(rand(), 95))
+        xs = vcat([0.0, 0.0, 1.0], fill(rand(), 97))
         ys = randn(100)
         result = binnedmeanandstd(xs, ys)
         @test length(result.subplots[1].series_list[2].plotattributes[:x]) == 2 # 2 bins only

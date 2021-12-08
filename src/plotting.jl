@@ -2,9 +2,11 @@ function binned_df(xs, ys, nbins)
     # compute the bin indices
     quantiles = 0.0:1.0/nbins:1.0
     edges = quantile(sort(xs), quantiles)
+    edges = unique(edges) # in case there are repeated values and some edges are the same
+    nbins_left = length(edges) - 1 # number of bins left after removing zero width bins
     bin_indices = [findlast(edge -> edge <= x, edges) for x in xs]
-    # push the highest value from overflow to last bin
-    bin_indices[findfirst(==(nbins+1), bin_indices)] = nbins
+    # push the highest value from overflow bin to last bin
+    bin_indices[findall(==(nbins_left+1), bin_indices)] .= nbins_left
 
     # compute the means and stds per bin
     df = DataFrame(; xs, ys, bin_indices)
@@ -44,7 +46,7 @@ end
     @series begin
         label := "data"
         markercolor := :orange
-        alpha := 0.2
+        alpha := 0.1
         seriestype := :scatter
         xs, ys
     end
@@ -54,6 +56,8 @@ end
         label := "mean"
         seriestype := :line
         linecolor := :orange
+        linewidth := 3
+        alpha := 1.0
         bin_df.xs, bin_df.ys_mean
     end
     @series begin
@@ -70,6 +74,7 @@ end
         label := "shuffled"
         seriestype := :line
         linecolor := :gray
+        alpha := 1.0
         bin_df_shuffle.xs, bin_df_shuffle.ys_mean
     end
     @series begin

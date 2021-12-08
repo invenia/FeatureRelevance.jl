@@ -1,6 +1,6 @@
 name = "FeatureRelevance"
 uuid = "040f642a-ad44-44b2-91d4-df3a5c5fa484"
-version = "0.1.10"
+version = "0.1.11"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"

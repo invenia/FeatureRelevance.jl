@@ -105,9 +105,9 @@ end
 RatioToLagged(criterion::Criterion; offset=24) = RatioToLagged(criterion, offset)
 
 function evaluate(criterion::RatioToLagged, x, y)
-    idx = criterion.offset:length(x)
+    idx = criterion.offset+1:length(x)
     lag_idx = 1:length(x)-criterion.offset
-    real = criterion.criterion(x[idx], y[idx])
-    lagged = criterion.criterion(y[lag_idx], y[idx])
+    real = criterion.criterion(view(x, idx), view(y, idx))
+    lagged = criterion.criterion(view(y, lag_idx), view(y, idx))
     return real / lagged
 end

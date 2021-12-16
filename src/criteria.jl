@@ -94,8 +94,8 @@ end
 """
     RatioToLagged(criterion::Criterion; offset::Int=24)
 
-Compute the ratio of `criterion(x[offset:end], y[offset:end])` and
-`criterion(y[1:end-offset], y[offset:end])`.
+Ratio of `criterion(x, y)` to the autocorrelation in `y`, i.e. `criterion(y_lagged, y)`, where
+`y_lagged` is `y` lagged by the `offset`.
 """
 struct RatioToLagged <: Criterion
     criterion::Criterion

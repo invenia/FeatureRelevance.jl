@@ -17,6 +17,22 @@ function binned_df(xs, ys, nbins)
     return bin_df
 end
 
+"""
+    binnedmeanandstd(xs, ys; bins=10, ylim=:auto)
+
+Equally split the `xs` and `ys` values into `bins`, based on the values of `xs`.
+Plots the values of `ys` in each bin, along with the mean and standard deviation.
+
+Additionally, it plots a gray band where the same calculation is done on the shuffled
+dataset, which allows us to eyeball the level of fluctuations due to finite sample size.
+
+Arguments
+---
+- xs: AbstractVector of `xs` (the variable in which the binning is done)
+- ys: AbstractVector of `ys` (the variable over which the mean and std are computed)
+- bins: number of bins
+- ylim: y-range for showing the data
+"""
 @userplot BinnedMeanAndStd
 
 # NB: bins not nbins (https://github.com/JuliaPlots/RecipesBase.jl/issues/86)

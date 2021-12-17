@@ -21,6 +21,12 @@
         @test 0.9 < criterion(x, rand(size(x)...)) < 1.1
     end
 
+    @testset "RatioToLagged()" begin
+        y3 = repeat(rand(24), 417)[1:10000]
+        criterion = RatioToLagged(MutualInformation())
+        @test criterion(x, y3) < 0.2
+    end
+
     @testset "ConditionalMutualInformation()" begin
         criterion = ConditionalMutualInformation()
         z = y1

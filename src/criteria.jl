@@ -90,3 +90,24 @@ function evaluate(criterion::RatioToShuffled, x, y, stabiliser=0.01)
     shuffled = criterion.criterion(x, shuffle(y)) + stabiliser
     return real / shuffled
 end
+
+"""
+    RatioToLagged(criterion::Criterion; offset::Int=24)
+
+Ratio of `criterion(x, y)` to the autocorrelation in `y`, i.e. `criterion(y_lagged, y)`, where
+`y_lagged` is `y` lagged by the `offset`.
+"""
+struct RatioToLagged <: Criterion
+    criterion::Criterion
+    offset::Int
+end
+
+RatioToLagged(criterion::Criterion; offset=24) = RatioToLagged(criterion, offset)
+
+function evaluate(criterion::RatioToLagged, x, y)
+    idx = criterion.offset+1:length(x)
+    lag_idx = 1:length(x)-criterion.offset
+    real = criterion.criterion(view(x, idx), view(y, idx))
+    lagged = criterion.criterion(view(y, lag_idx), view(y, idx))
+    return real / lagged
+end

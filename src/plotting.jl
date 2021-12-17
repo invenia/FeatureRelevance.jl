@@ -20,10 +20,8 @@ end
 """
     binnedmeanandstd(xs, ys; bins=10, ylim=:auto)
 
-Bin the `xs`, `ys` data in `bins` bins, based on the value of `xs`, such that the bins have
-an equal number of examples in them. Compute and plot the mean and standard deviation of
-`ys` in each of the bins, and plot the mean along with the band representing standard
-deviation.
+Equally split the `xs` and `ys` values into `bins`, based on the values of `xs`.
+Plots the values of `ys` in each bin, along with the mean and standard deviation.
 
 Additionally, it plots a gray band where the same calculation is done on the shuffled
 dataset, which allows us to eyeball the level of fluctuations due to finite sample size.

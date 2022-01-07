@@ -5,6 +5,10 @@ include:
   - project: invenia/gitlab-ci-helper
     file: /templates/julia.yml
 
+# Only include 64-bit jobs; research typically involves high memory machines anyway
+variables:
+  platform: "x86_64"  # 64-bit
+
 # If you need to install system packages, such as `unzip`, you can do so as follows:
 # .test:
 #  before_script:

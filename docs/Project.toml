@@ -1,3 +1,12 @@
 [deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 FeatureRelevance = "040f642a-ad44-44b2-91d4-df3a5c5fa484"
+LightGBM = "7acf609c-83a4-11e9-1ffb-b912bcd3b04a"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+
+[compat]
+DataFrames = "1"
+Documenter = "0.27"
+LightGBM = "0.5"
+Plots = "1"

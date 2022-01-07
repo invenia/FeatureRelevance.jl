@@ -34,6 +34,6 @@ rng = MersenneTwister(1)
     include("relevance.jl")
     include("report.jl")
 
-    # Only run LightGBM tests on linux by default
-    Sys.islinux() && include("lightgbm.jl")
+    # Only run LightGBM tests on linux x86 runner by default
+    Sys.islinux() && Sys.ARCH === :x86_64 && include("lightgbm.jl")
 end

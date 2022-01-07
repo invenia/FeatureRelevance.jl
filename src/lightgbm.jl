@@ -105,7 +105,8 @@ end
 # Utility function for coercing tables and arrays into the correct LightGBM type
 _to_real_array(data::Array{<:Real}) = data
 _to_real_array(data::Base.Generator) = _to_real_array(reduce(hcat, data))
-_to_real_array(data::AbstractVector) = _to_real_array(reshape(data, length(data), 1))
+_to_real_array(data::AbstractVector{<:AbstractVector}) = _to_real_array(reduce(hcat, data))
+_to_real_array(data::AbstractVector{<:Real}) = _to_real_array(reshape(data, length(data), 1))
 function _to_real_array(data)
     X = Tables.istable(data) ? Tables.matrix(data) : data
     return Matrix{Float64}(coalesce(X, NaN))

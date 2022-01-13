@@ -53,6 +53,13 @@ using FeatureRelevance: PredictivePowerScore, GradientBoostedImportance, GainImp
         # Test with array inputs
         r2 = report(alg, df.target, Tables.matrix(df[:, [:x2, :x3]]))
         @test DataFrame(r2).score == r.score
+
+        # Test dropping redundant features
+        df.x11 = X # identical df.x1, should be dropped
+        alg = GradientBoostedImportance(; importance_type=:gain, iterations=0, positive=true)
+        r = DataFrame(report(alg, df[:, [:target]], df[:, [:x1, :x11, :x2, :x3]]))
+        f, scores = r[:, :feature], r[:, :score]
+        @test issetequal(f, [:x1, :x2, :x3])
     end
 
     @testset "_to_real_array" begin

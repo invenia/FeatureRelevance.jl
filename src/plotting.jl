@@ -13,7 +13,7 @@ function binned_df(xs, ys, nbins)
     gb = groupby(df, :bin_indices)
     bin_df = combine(gb, :ys => mean, :ys => std)
     bin_df.xs = 0.5*(edges[2:end] + edges[1:end-1]) # centres
-    
+
     return bin_df
 end
 
@@ -84,7 +84,7 @@ Arguments
         alpha := 0.35
         bin_df.xs, bin_df.ys_mean - bin_df.ys_std
     end
-    
+
     # shuffled data
     @series begin
         label := "shuffled"
@@ -104,3 +104,124 @@ Arguments
     return nothing
 end
 
+"""
+    convergence(f, features, targets; n=100, sz=Int[], group_names=String[], contiguous=false)
+
+Re-calculate the feature relevance between each feature and target with various sample sizes.
+Useful for checking that our criterion metric is converging for various feature x target pairs as our sample/lookback size grows.
+You'll find that some feature x target pairs converge more easily than others based on their relative complexity.
+However, if scores aren't converging then this may indicate an issue with your desired metric.
+By default this will consider samples of `0.05:0.05:1.0 * nobs` using random sampling w/o replacement.
+
+1. Colour is a logic feature grouping (temp, wind, load, etc)
+2. X-axis is the varying sample sizes
+3. Y-axis is the computed relevance
+
+# Arguments
+- `f``: A callable function/criterion for calculating relevance between individual targets and features
+  Individual scores are calculated columnwise, similar to `report` and `selection`.
+- `features`: iterable of tables representing logical groupings of features (e.g., temperature, wind, load, prices).
+  If only a single table/matrix is provided then each individual column is treated as its own group.
+- `targets`: table of all target values
+
+# Keywords
+- `n`: Number of samples to draw for each size (adjusts smoothness)
+- `sz`: A range of dataset sizes to consider (adjusts shape)
+- `group_names`: The name of each feature group. Should have the same length as the number of tables in `features`
+- `contiguous`: Whether our drawn samples must be for a contiguous window (e.g., daily lookback)
+"""
+@userplot Convergence
+
+@recipe function f(c::Convergence; n=100, sz=[], group_names=[], contiguous=false)
+    func, features, targets = c.args
+    #=
+    `typejoin`/`eltype` may return too wide of a type to identify a table correctly,
+    so we check each group/component separately.
+
+    Example:
+    ```
+    julia> @show eltype(f1) Tables.istable(eltype(f1)) all(T -> Tables.istable(T), typeof.(f1))
+    eltype(f1) = NamedTuple
+    Tables.istable(eltype(f1)) = false
+    all((T->begin
+                #= REPL[30]:1 =#
+                Tables.istable(T)
+            end), typeof.(f1)) = true
+    true
+
+    julia> @show eltype(f2) Tables.istable(eltype(f2)) all(T -> Tables.istable(T), typeof.(f2))
+    eltype(f2) = NamedTuple{names, Tuple{Vector{Float64}, Vector{Float64}}} where names
+    Tables.istable(eltype(f2)) = true
+    all((T->begin
+                #= REPL[31]:1 =#
+                Tables.istable(T)
+            end), typeof.(f2)) = true
+    true
+    ```
+    =#
+    issingular = !all(x -> Tables.istable(x) || x isa AbstractArray, features)
+    features = issingular ? _get_columns(features) : features
+    gnames = isempty(group_names) ? (1:length(features)) : group_names
+    sampler = contiguous ? contiguoussampled : randomsampled
+
+    nnames = length(gnames)
+    nfeatures = length(features)
+    if nnames != nfeatures
+        throw(ArgumentError(
+            "Number of groups in `features` and `group_names` do not match: " *
+            "($nfeatures, $nnames)"
+        ))
+    end
+
+    legend := true
+    ylabel := "score"
+    xlabel := "sample size (contiguous=$contiguous)"
+
+    for (label, group) in zip(gnames, features)
+        iter = Iterators.product(_get_columns(targets), _get_columns(group))
+        nobs = length(first(first(iter)))
+        x = unique(filter(>(1), isempty(sz) ? floor.(Int, 0.05:0.05:1.0*nobs) : sz))
+        # Preallocate a matrix of our nsamples * npairs + npairs (for NaNs)
+        # Insert NaNs to split each independent line
+        # https://docs.juliaplots.org/latest/input_data/#Unconnected-Data-within-same-groups
+        nsamples = length(x)
+        npairs = length(iter)
+        nrow = nsamples * npairs + npairs
+        results = fill(NaN, (nrow, 2))
+
+        Threads.@threads for (i, t) in collect(enumerate(iter))
+            feature, target = t
+            start_idx = (i - 1) * nsamples + i
+            end_idx = start_idx + nsamples - 1
+            idx = start_idx:end_idx
+            # @show nsamples idx x
+            results[idx, 1] = float.(x)
+            results[idx, 2] = [sampler(func, feature, target; n=n, sz=s) for s in x]
+        end
+
+        @series begin
+            label := label
+            seriestype := :path
+            results[:, 1], results[:, 2]
+        end
+    end
+
+    return nothing
+end
+
+function randomsampled(f, x, y; n, sz)
+    return map(1:n) do _
+        idx = sample(1:length(x), sz; replace=false, ordered=true)
+        f(x[idx], y[idx])
+    end |> median
+end
+
+function contiguoussampled(f, x, y; n, sz)
+    # NOTE: As our window size grows we'll be able to draw fewer unique samples
+    iter = unique(length(x) > sz ? sample(1:length(x)-sz, n) : [1])
+
+    return map(iter) do start_idx
+        idx = start_idx:start_idx+sz-1
+        f(x[idx], y[idx])
+    end |> median
+end

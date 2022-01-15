@@ -11,6 +11,7 @@ using Statistics
 using StatsBase
 using Tables
 
+include("utils.jl")
 include("algorithms.jl")
 include("criteria.jl")
 include("plotting.jl")

@@ -88,13 +88,13 @@ features = (;
 
 The most basic algorithm is simply to select the top features independent of one another.
 ```@example usage-selection
-report(Top(5), target, features) |> DataFrame
+report(Top(; n=5), target, features) |> DataFrame
 ```
-However, it could be the case that we do not want to do any filtering and just return all values. 
+However, it could be the case that we do not want to do any filtering and just return all values.
 
-`report(ALL, target, features) |> DataFrame`
+`report(Top(), target, features) |> DataFrame`
 
-In practice, we usually want to filter, as there are `O(T*F)` (number of targets, number of features) which can be large.  
+In practice, we usually want to filter, as there are `O(T*F)` (number of targets, number of features) which can be large.
 
 NOTE: `report` returns a [`Tables.columntable`](https://tables.juliadata.org/stable/#Tables.columntable), so you can always convert the result to whatever table type you require.
 

@@ -26,29 +26,35 @@ Available algorithms include: `Top`, `GreedyMRMR`, `GreedyJMI`.
 selection(alg, target, features...)
 
 """
-    Top(; n)
+    Top(; criterion=MutualInformation(), n=0)
+    Top(f; n=0)
 
 Select the top n relevant features.
 This is fast but might result in redundant features.
 Mutual information maximisation (MIM).
 
 # Arguments
+- `criterion`: The function or criteria to use for evaluating feature relevance
 - `n`: A positive values indicates the number of most relevant features to select.
        Non-positive values indicate the number of least relevant features to drop.
+       A value of zero indicates that all features should be returned regardless of score.
+- `f`: Passing a function as the first positional argument support do-block syntax for
+  custom metric.
 """
-Base.@kwdef struct Top <: Algorithm
-    n::Int
+Base.@kwdef struct Top{T<:Union{Criterion,Function}} <: Algorithm
+    criterion::T=MutualInformation()
+    n::Int=0
 end
 
-# Constant for selection all features
-const ALL = Top(0)
+# Utility constructor for do-block syntax
+Top(f; kwargs...) = Top(; criterion=f, kwargs...)
 
-selection(top::Top, args...) = selection(MutualInformation(), top, args...)
+function selection(alg::Top, target, features)
+    criterion = alg.criterion
 
-function selection(criterion, alg::Top, target, features)
     nfeatures = length(features)
     n = if alg.n <= 0
-        nfeatures - alg.n
+        nfeatures + alg.n
     elseif 0 < alg.n <= nfeatures
         alg.n
     else
@@ -73,7 +79,7 @@ function selection(criterion, alg::Top, target, features)
 end
 
 """
-    Greedy(n; β=true, γ=false, positive=false)
+    Greedy(; n=0 β=true, γ=false, positive=false)
 
 Select according to a greedy strategy. This is based on [1] equation 17/18.
 
@@ -87,7 +93,7 @@ Select according to a greedy strategy. This is based on [1] equation 17/18.
 Information Theoretic Feature Selection, JMLR 13.
 """
 Base.@kwdef struct Greedy <: Algorithm
-    n::Int
+    n::Int=0
     β::Bool=true
     γ::Bool=false
     positive::Bool=false
@@ -100,7 +106,7 @@ Greedy selection taking into account pairwise dependence of features, but assumi
 class-conditional independence.
 Maximum relevancy minimum redundancy (MRMR).
 """
-GreedyMRMR(n; positive=false) = Greedy(; n=n, β=true, γ=false, positive=positive)
+GreedyMRMR(; n=0, positive=false) = Greedy(; n=n, β=true, γ=false, positive=positive)
 
 """
     GreedyJMI(n; positive=false)
@@ -109,7 +115,7 @@ Greedy selection taking into account pairwise dependence of features, and also t
 account pairwise class-condtional dependence.
 Joint mutual information (JMI).
 """
-GreedyJMI(n; kwargs...) = Greedy(; n=n, β=true, γ=true, kwargs...)
+GreedyJMI(; n=0, kwargs...) = Greedy(; n=n, β=true, γ=true, kwargs...)
 
 function selection(alg::Greedy, target, features)
     # Since we're gonna need to index into each feature repeatedly we collect the feature
@@ -133,10 +139,17 @@ function selection(alg::Greedy, target, features)
     # from consideration.
     mask = map(ismissing, relevances)
     deleteat!(indices, mask)
+    nfeatures = count(!, mask)
 
     # Determine the number of selected indices and scores we're returning
-    n = min(alg.n, count(!, mask))
-    alg.n <= count(!, mask) || @warn("Too many relevance scores are missing. Returning $n.")
+    n = if alg.n <= 0
+        nfeatures + alg.n
+    elseif 0 < alg.n <= nfeatures
+        alg.n
+    else
+        @warn("Too many relevance scores are missing. Returning $n.")
+        nfeatures
+    end
 
     # Pre-allocate our selected items
     # NOTE: There might be a cleaner iteration algorithm, but reusing pre-allocated

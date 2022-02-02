@@ -35,5 +35,5 @@ features = DataFrame(X)
 
 Finally, generate a report of the top 5 non-redundant features for each target variable.
 ```@repl quickstart
-report(GreedyMRMR(5; positive=true), targets, features) |> DataFrame
+report(GreedyMRMR(; n=5, positive=true), targets, features) |> DataFrame
 ```

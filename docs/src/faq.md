@@ -54,7 +54,7 @@ features = hcat(
 using LightGBM
 using FeatureRelevance: report, Top, PredictivePowerScore
 
-feat_imp = report(PredictivePowerScore(), Top(5), target, features)
+feat_imp = report(Top(; criterion=PredictivePowerScore(), n=5), target, features)
 ```
 
 We can also use the split and gain importance algorithms.

@@ -88,11 +88,11 @@ features = (;
 
 The most basic algorithm is simply to select the top features independent of one another.
 ```@example usage-selection
-report(Top(; n=5), target, features) |> DataFrame
+report(Top(; n=5), features, target) |> DataFrame
 ```
 However, it could be the case that we do not want to do any filtering and just return all values.
 
-`report(Top(), target, features) |> DataFrame`
+`report(Top(), features, target) |> DataFrame`
 
 In practice, we usually want to filter, as there are `O(T*F)` (number of targets, number of features) which can be large.
 
@@ -102,14 +102,14 @@ However, we may be concerned about redundant information between features, so th
 algorithm may be desirable at the cost of increased execution time.
 
 ```@example usage-selection
-report(Greedy(; n=5, β=true, γ=true, positive=true), target, features) |> DataFrame
+report(Greedy(; n=5, β=true, γ=true, positive=true), features, target) |> DataFrame
 ```
 We can see that the several scores are lower due to redundancy between the features and the
 second copy of `cos.(target)` has been completely excluded.
 
 Alternatively, we may want to consider an algorithm which relies on a fitted estimator to select relevant features.
 ```@example usage-selection
-report(SplitImportance(; iterations=10), target, features) |> DataFrame
+report(SplitImportance(; iterations=10), features, target) |> DataFrame
 ```
 This successfully assigns the strongest signal to `target`, `sin.(target)` and `cos.(target)` and ignores redundant information.
 However, this requires that you have LightGBM.jl and its dependencies installed already.
@@ -119,5 +119,5 @@ Finally, what if we had multiple targets
 
 ```@example usage-selection
 target = (; p = target.p, q = log.(abs.(target.p)))
-report(SplitImportance(; iterations=10), target, features) |> DataFrame
+report(SplitImportance(; iterations=10), features, target) |> DataFrame
 ```

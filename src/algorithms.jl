@@ -2,12 +2,12 @@
     Algorithm
 
 The algorithm to use when evaluating feature relevancy.
-New algorithms must implement `selection(alg, target, features...)`
+New algorithms must implement `selection(alg, features, target)`
 """
 abstract type Algorithm end
 
 """
-    selection(algorithm, target, features) -> (idx, scores)
+    selection(algorithm, features, target) -> (idx, scores)
 
 Use the `algorithm` to find the most relevant `features` for the `target`.
 Returning the index and relevance score for each selected feature.
@@ -16,14 +16,14 @@ Available algorithms include: `Top`, `GreedyMRMR`, `GreedyJMI`.
 
 # Arguments:
 - `algorithm`: How to select the features.
-- `target`: An abstract vector observations for a single target
 - `features`: An iterable of feature vectors to consider
+- `target`: An abstract vector observations for a single target
 
 # Returns:
 - `idx`: Location of each selected feature in features.
 - `scores`: Scores associated with these features.
 """
-selection(alg, target, features...)
+selection(alg, features, target)
 
 """
     Top(; criterion=MutualInformation(), n=0)
@@ -49,7 +49,7 @@ end
 # Utility constructor for do-block syntax
 Top(f; kwargs...) = Top(; criterion=f, kwargs...)
 
-function selection(alg::Top, target, features)
+function selection(alg::Top, features, target)
     criterion = alg.criterion
 
     nfeatures = length(features)
@@ -117,7 +117,7 @@ Joint mutual information (JMI).
 """
 GreedyJMI(; n=0, kwargs...) = Greedy(; n=n, β=true, γ=true, kwargs...)
 
-function selection(alg::Greedy, target, features)
+function selection(alg::Greedy, features, target)
     # Since we're gonna need to index into each feature repeatedly we collect the feature
     # vectors (vector of vectors)
     X = collect(features)

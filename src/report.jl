@@ -1,5 +1,5 @@
 """
-    report(alg, targets, features)
+    report(alg, features, targets)
 
 For each column in `targets`, use method `alg` to select features from among the columns
 of `features`.
@@ -14,7 +14,7 @@ of `features`.
 - A `Tables.rowtable` of each selected target x feature relevance score with columns
   `:target`, `:feature` and `:score`.
 """
-function report(alg::Algorithm, targets, features)
+function report(alg::Algorithm, features, targets)
     X, y = _validate(features), _validate(targets)
 
     feature_names = _get_names(X)
@@ -27,7 +27,7 @@ function report(alg::Algorithm, targets, features)
     # We use a Channel as a buffer since we don't know how many results to expect.
     results = Channel(; ctype=T, csize=256) do ch
         Threads.@threads for (i, target) in collect(enumerate(_get_columns(y)))
-            selected = selection(alg, target, _get_columns(X))
+            selected = selection(alg, _get_columns(X), target)
             for (j, score) in zip(selected...)
                 record = (; target=target_names[i], feature=feature_names[j], score=score)
 

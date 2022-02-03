@@ -29,7 +29,7 @@
             ]
 
             @testset "$alg correct" for alg in algs
-                r = DataFrame(report(alg, targets, features))
+                r = DataFrame(report(alg, features, targets))
                 sort!(r, :score; rev=true)
 
                 if alg isa Top
@@ -78,7 +78,7 @@
         end
 
         @testset "MutualInformation, Top(3)" begin
-            m = DataFrame(report(Top(; criterion=MutualInformation(), n=3), targets, features))
+            m = DataFrame(report(Top(; criterion=MutualInformation(), n=3), features, targets))
             f, scores = m[:, :feature], m[:, :score]
             @test f == [:x1, :x2, :x3]
             @test scores[1] ≈ mi[:target][:x1]
@@ -94,20 +94,20 @@
         feature with the target feature =#
 
         @testset "GreedyMRMR" begin
-            m = DataFrame(report(GreedyMRMR(; n=3), targets, features))
+            m = DataFrame(report(GreedyMRMR(; n=3), features, targets))
             f, scores = m[:, :feature], m[:, :score]
             @test f == [:x1, :x3, :x2]
             @test scores[1] ≈ mi[:target][:x1]
             @test scores[2] ≈ mi[:target][:x3] - mi[:x1][:x3]
             @test scores[3] ≈ mi[:target][:x2] - 1.0 / 2.0 * (mi[:x1][:x2] + mi[:x3][:x2])
-            m2 = DataFrame(report(GreedyMRMR(; n=3, positive=true), targets, features))
+            m2 = DataFrame(report(GreedyMRMR(; n=3, positive=true), features, targets))
             @test m2.feature == [:x1, :x2]
             @test m2.score ≈ scores[[1, 3]]  # test `positive=true` drops negative x3 score
         end
 
         @testset "GreedyJMI" begin
             # randomly fails
-            m = DataFrame(report(GreedyJMI(; n=3), targets, features))
+            m = DataFrame(report(GreedyJMI(; n=3), features, targets))
             f, scores = m[:, :feature], m[:, :score]
             @test f == [:x1, :x3, :x2]
             @test scores[1] ≈ mi[:target][:x1]
@@ -123,12 +123,12 @@
         input[:, 1:2] .= 1.0
         output = rand(12, 2)
 
-        idx, scores = FeatureRelevance.selection(GreedyMRMR(; n=8), output[:, 1], eachcol(input))
+        idx, scores = FeatureRelevance.selection(GreedyMRMR(; n=8), eachcol(input), output[:, 1])
         @test isdisjoint(idx, [1, 2])
 
         # Test missing input causing relevance to be missing
         input[:, 1] .= missing
-        idx, scores = FeatureRelevance.selection(GreedyMRMR(; n=8), output[:, 1], eachcol(input))
+        idx, scores = FeatureRelevance.selection(GreedyMRMR(; n=8), eachcol(input), output[:, 1])
         @test isdisjoint(idx, [1, 2])
     end
 end

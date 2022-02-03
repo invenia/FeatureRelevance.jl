@@ -100,7 +100,7 @@ Base.@kwdef struct Greedy <: Algorithm
 end
 
 """
-    GreedyMRMR(n; positive=false)
+    GreedyMRMR(; n=0, positive=false)
 
 Greedy selection taking into account pairwise dependence of features, but assuming pairwise
 class-conditional independence.
@@ -109,7 +109,7 @@ Maximum relevancy minimum redundancy (MRMR).
 GreedyMRMR(; n=0, positive=false) = Greedy(; n=n, β=true, γ=false, positive=positive)
 
 """
-    GreedyJMI(n; positive=false)
+    GreedyJMI(; n=0, positive=false)
 
 Greedy selection taking into account pairwise dependence of features, and also taking into
 account pairwise class-condtional dependence.

@@ -6,7 +6,6 @@ of `features`.
 
 # Arguments
 - `alg`: The algorithm to use for selecting relevant `features` for each `target`.
-         If only `criterion` is specified then this assumed to be `Top(Inf)`.
 - `targets`: A table or matrix for 1 or more target values
 - `features`: A table or matrix for 1 or more features
 

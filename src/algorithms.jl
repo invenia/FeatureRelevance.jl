@@ -39,7 +39,7 @@ Mutual information maximisation (MIM).
        Non-positive values indicate the number of least relevant features to drop.
        A value of zero indicates that all features should be returned regardless of score.
 - `f`: Passing a function as the first positional argument support do-block syntax for
-  custom metric.
+  custom criterion.
 """
 Base.@kwdef struct Top{T<:Union{Criterion,Function}} <: Algorithm
     criterion::T=MutualInformation()
@@ -79,7 +79,7 @@ function selection(alg::Top, features, target)
 end
 
 """
-    Greedy(; n=0 β=true, γ=false, positive=false)
+    Greedy(; n=0, β=true, γ=false, positive=false)
 
 Select according to a greedy strategy. This is based on [1] equation 17/18.
 

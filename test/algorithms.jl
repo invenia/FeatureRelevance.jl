@@ -13,19 +13,38 @@
             targets = df[:, [1]]
             features = df[:, 2:end]
 
-            @testset "Top N" begin
-                # Top N will just find the top features, even though they are duplicates
-                r = DataFrame(report(MutualInformation(), Top(2), targets, features))
-                @test r.feature == [:x1, :x2]
-            end
-
             # Both MRMR and JMI should be clever enough to get x1/2 and x3
             # They should NOT pick both x1 and x2 since this is a straight duplicate
-            for m in (GreedyMRMR(2), GreedyJMI(2))
-                @testset "$m correct" begin
-                    r = DataFrame(report(m, targets, features))
-                    @test r.feature != [:x1, :x2]
-                    @test (r.feature == [:x1, :x3]) || (r.feature == [:x2, :x3])
+            algs = [
+                Top(cor),
+                Top(; criterion=MutualInformation()),
+                GreedyMRMR(),
+                GreedyJMI(),
+                Top(; criterion=MutualInformation(), n=2),
+                GreedyMRMR(; n=2),
+                GreedyJMI(; n=2),
+                Top(; criterion=MutualInformation(), n=-1),
+                GreedyMRMR(; n=-1),
+                GreedyJMI(; n=-1),
+            ]
+
+            @testset "$alg correct" for alg in algs
+                r = DataFrame(report(alg, features, targets))
+                sort!(r, :score; rev=true)
+
+                if alg isa Top
+                    if iszero(alg.n)
+                        @test r.feature == [:x1, :x2, :x3]
+                    else
+                        @test r.feature == [:x1, :x2]
+                    end
+                    @test r.score[1] == r.score[2]
+                else
+                    if !iszero(alg.n)
+                        @test (r.feature == [:x1, :x3]) || (r.feature == [:x2, :x3])
+                    end
+                    @test r.score[1] != r.score[2]
+                    @test r.score[1] / r.score[2] > 2
                 end
             end
         end
@@ -59,7 +78,7 @@
         end
 
         @testset "MutualInformation, Top(3)" begin
-            m = DataFrame(report(MutualInformation(), Top(3), targets, features))
+            m = DataFrame(report(Top(; criterion=MutualInformation(), n=3), features, targets))
             f, scores = m[:, :feature], m[:, :score]
             @test f == [:x1, :x2, :x3]
             @test scores[1] ≈ mi[:target][:x1]
@@ -75,20 +94,20 @@
         feature with the target feature =#
 
         @testset "GreedyMRMR" begin
-            m = DataFrame(report(GreedyMRMR(3), targets, features))
+            m = DataFrame(report(GreedyMRMR(; n=3), features, targets))
             f, scores = m[:, :feature], m[:, :score]
             @test f == [:x1, :x3, :x2]
             @test scores[1] ≈ mi[:target][:x1]
             @test scores[2] ≈ mi[:target][:x3] - mi[:x1][:x3]
             @test scores[3] ≈ mi[:target][:x2] - 1.0 / 2.0 * (mi[:x1][:x2] + mi[:x3][:x2])
-            m2 = DataFrame(report(GreedyMRMR(3; positive=true), targets, features))
+            m2 = DataFrame(report(GreedyMRMR(; n=3, positive=true), features, targets))
             @test m2.feature == [:x1, :x2]
             @test m2.score ≈ scores[[1, 3]]  # test `positive=true` drops negative x3 score
         end
 
         @testset "GreedyJMI" begin
             # randomly fails
-            m = DataFrame(report(GreedyJMI(3), targets, features))
+            m = DataFrame(report(GreedyJMI(; n=3), features, targets))
             f, scores = m[:, :feature], m[:, :score]
             @test f == [:x1, :x3, :x2]
             @test scores[1] ≈ mi[:target][:x1]
@@ -104,12 +123,12 @@
         input[:, 1:2] .= 1.0
         output = rand(12, 2)
 
-        idx, scores = FeatureRelevance.selection(GreedyMRMR(8), output[:, 1], eachcol(input))
+        idx, scores = FeatureRelevance.selection(GreedyMRMR(; n=8), eachcol(input), output[:, 1])
         @test isdisjoint(idx, [1, 2])
 
         # Test missing input causing relevance to be missing
         input[:, 1] .= missing
-        idx, scores = FeatureRelevance.selection(GreedyMRMR(8), output[:, 1], eachcol(input))
+        idx, scores = FeatureRelevance.selection(GreedyMRMR(; n=8), eachcol(input), output[:, 1])
         @test isdisjoint(idx, [1, 2])
     end
 end

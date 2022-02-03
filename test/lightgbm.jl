@@ -34,7 +34,7 @@ using FeatureRelevance: PredictivePowerScore, GradientBoostedImportance, GainImp
 
         prev = zeros(3)
         for alg in (GainImportance(), SplitImportance())
-            idx, scores = selection(alg, df[:, [:target]], df[:, [:x1, :x2, :x3]])
+            idx, scores = selection(alg, df[:, [:x1, :x2, :x3]], df[:, [:target]])
             # Since our features are progressively more noisy we can just check that
             # that the scores are in sorted in descending order
             @test issorted(scores; rev=true)
@@ -45,19 +45,19 @@ using FeatureRelevance: PredictivePowerScore, GradientBoostedImportance, GainImp
 
         # Test that this also works with `report`
         alg = GradientBoostedImportance(:gain)
-        r = DataFrame(report(alg, df[:, [:target]], df[:, [:x2, :x3]]))
+        r = DataFrame(report(alg, df[:, [:x2, :x3]], df[:, [:target]]))
         f, scores = r[:, :feature], r[:, :score]
         @test f == [:x2, :x3]
         @test scores[1] > scores[2]
 
         # Test with array inputs
-        r2 = report(alg, df.target, Tables.matrix(df[:, [:x2, :x3]]))
+        r2 = report(alg, Tables.matrix(df[:, [:x2, :x3]]), df.target)
         @test DataFrame(r2).score == r.score
 
         # Test dropping redundant features
         df.x11 = X # identical df.x1, should be dropped
         alg = GradientBoostedImportance(; importance_type=:gain, iterations=0, positive=true)
-        r = DataFrame(report(alg, df[:, [:target]], df[:, [:x1, :x11, :x2, :x3]]))
+        r = DataFrame(report(alg, df[:, [:x1, :x11, :x2, :x3]], df[:, [:target]]))
         f, scores = r[:, :feature], r[:, :score]
         @test issetequal(f, [:x1, :x2, :x3])
     end

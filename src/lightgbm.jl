@@ -82,16 +82,16 @@ end
 GainImportance(; kwargs...) = GradientBoostedImportance(; importance_type=:gain, kwargs...)
 SplitImportance(; kwargs...) = GradientBoostedImportance(; importance_type=:split, kwargs...)
 
-function selection(alg::GradientBoostedImportance, target, features)
+function selection(alg::GradientBoostedImportance, features, target)
     # NOTE: If we have more than 1 target column LightGBM will error with a
     # size mismatch error.
-    return selection(alg, vec(_to_real_array(target)), _to_real_array(features))
+    return selection(alg, _to_real_array(features), vec(_to_real_array(target)))
 end
 
 function selection(
     alg::GradientBoostedImportance,
-    target::Vector{<:Real},
     features::Matrix{<:Real},
+    target::Vector{<:Real},
 )
     verbosity=alg.verbosity
     estimator = LGBMRegression()

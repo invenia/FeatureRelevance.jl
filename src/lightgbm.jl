@@ -82,12 +82,6 @@ end
 GainImportance(; kwargs...) = GradientBoostedImportance(; importance_type=:gain, kwargs...)
 SplitImportance(; kwargs...) = GradientBoostedImportance(; importance_type=:split, kwargs...)
 
-function selection(alg::GradientBoostedImportance, features, target)
-    # NOTE: If we have more than 1 target column LightGBM will error with a
-    # size mismatch error.
-    return selection(alg, _to_real_array(features), vec(_to_real_array(target)))
-end
-
 function selection(
     alg::GradientBoostedImportance,
     features::Matrix{<:Real},
@@ -117,7 +111,68 @@ function selection(
     return selected_indices, selected_scores
 end
 
+
+"""
+    ShapleyValues(; train_size=0.8, positive=false, verbosity=-1)
+
+Fits a `LighGBM.LGBMRegression` estimator on a training partition of the provided features / targets.
+SHAP scores are calculated by averaging the predicted SHAP contributions
+([`predict_type=3`](https://github.com/IQVIA-ML/LightGBM.jl/blob/master/src/predict.jl#L12)) on the remaining test features.
+
+Reminder: Only the magnitude (not the direction) of a SHAP value determines the relevance of a feature.
+
+# Arguments
+
+- `train_size::Float64=0.2`: Train partition ratio size. The default value of 0.8 represents a 80/20 train/test split.
+- `positive::Bool=false`: Only return non-zero scores. SHAP scores can be positive or negative.
+- `verbosity::Int=-1`: The verbosity level to pass to LightGBM
+"""
+Base.@kwdef struct ShapleyValues <: Algorithm
+    train_size::Float64=0.8
+    positive::Bool=false
+    verbosity::Int=-1
+end
+
+function selection(alg::ShapleyValues, features::Matrix{<:Real}, target::Vector{<:Real})
+    # Split test/train data
+    (train_X, train_y), (test_X, test_y) = splitobs((
+        features, target);
+        at=alg.train_size,
+        obsdim=:first
+    )
+
+    # Train and predict with LGBMRegression and predict_type=3
+    verbosity=alg.verbosity
+    estimator = LGBMRegression()
+    LightGBM.fit!(estimator, collect(train_X), collect(train_y); alg.verbosity)
+    preds = LightGBM.predict(estimator, collect(test_X); predict_type=3)  # 3 indicates SHAP
+
+    # Reshape the output vector back to a matrix, so we can take the median for each feature.
+    # The extra value per observation represents a bias value.
+    # https://lightgbm.readthedocs.io/en/latest/C-API.html#c.LGBM_BoosterPredictForCSC
+    nobs, nfeatures = size(test_X)
+    selected_scores = mean(reshape(preds, (nfeatures+1, nobs)); dims=2)[1:nfeatures]
+    selected_indices = collect(eachindex(selected_scores))
+
+    # Since SHAP values can be positive or negative the `positive` kwarg will remove values
+    # that are exactly 0.0.
+    if alg.positive
+        idx = findall(!iszero, selected_scores)
+        if length(idx) < length(selected_scores)
+            return selected_indices[idx], selected_scores[idx]
+        end
+    end
+
+    return selected_indices, selected_scores
+end
+
 # Utility function for coercing tables and arrays into the correct LightGBM type
+function selection(alg::Union{GradientBoostedImportance,ShapleyValues}, features, target)
+    # NOTE: If we have more than 1 target column LightGBM will error with a
+    # size mismatch error.
+    return selection(alg, _to_real_array(features), vec(_to_real_array(target)))
+end
+
 _to_real_array(data::Array{<:Real}) = data
 _to_real_array(data::Base.Generator) = _to_real_array(reduce(hcat, data))
 _to_real_array(data::AbstractVector{<:AbstractVector}) = _to_real_array(reduce(hcat, data))

@@ -1,6 +1,11 @@
 using LightGBM
 
-using FeatureRelevance: PredictivePowerScore, GradientBoostedImportance, GainImportance, SplitImportance
+using FeatureRelevance:
+    PredictivePowerScore,
+    GradientBoostedImportance,
+    GainImportance,
+    SplitImportance,
+    ShapleyValues
 
 @testset "lightgbm.jl" begin
     @testset "PredictivePowerScore" begin
@@ -24,20 +29,19 @@ using FeatureRelevance: PredictivePowerScore, GradientBoostedImportance, GainImp
     end
 
     @testset "GradientBoostedImportance" begin
-        X = rand(-2.0:0.1:2.0, 10000)
+        X = rand(-5.0:0.1:5.0, 100000)
         df = DataFrame(
-            :x1 => X,
-            :x2 => [x + rand(-0.5:0.1:0.5) for x in X],
-            :x3 => [x + rand(-1.0:0.1:1.0) for x in X],
-            :target => [x^2 for x in X],
+            :x1 => X + rand(0.0:0.1:0.5, length(X)),
+            :x2 => X + rand(-5.0:0.1:5.0, length(X)),
+            :target => X.^2,
         )
 
         prev = zeros(3)
         for alg in (GainImportance(), SplitImportance())
-            idx, scores = selection(alg, df[:, [:x1, :x2, :x3]], df[:, [:target]])
+            idx, scores = selection(alg, df[:, [:x1, :x2]], df[:, [:target]])
             # Since our features are progressively more noisy we can just check that
             # that the scores are in sorted in descending order
-            @test issorted(scores; rev=true)
+            @test issorted(round.(scores; digits=10); rev=true)
 
             # Test that our scores aren't identical between importance types
             @test scores != prev
@@ -45,21 +49,64 @@ using FeatureRelevance: PredictivePowerScore, GradientBoostedImportance, GainImp
 
         # Test that this also works with `report`
         alg = GradientBoostedImportance(:gain)
-        r = DataFrame(report(alg, df[:, [:x2, :x3]], df[:, [:target]]))
+        r = DataFrame(report(alg, df[:, [:x1, :x2]], df[:, [:target]]))
         f, scores = r[:, :feature], r[:, :score]
-        @test f == [:x2, :x3]
+        @test f == [:x1, :x2]
         @test scores[1] > scores[2]
 
         # Test with array inputs
-        r2 = report(alg, Tables.matrix(df[:, [:x2, :x3]]), df.target)
+        r2 = report(alg, Tables.matrix(df[:, [:x1, :x2]]), df.target)
         @test DataFrame(r2).score == r.score
 
         # Test dropping redundant features
-        df.x11 = X # identical df.x1, should be dropped
+        df.x11 = df.x1 # identical df.x1, should be dropped
         alg = GradientBoostedImportance(; importance_type=:gain, iterations=0, positive=true)
-        r = DataFrame(report(alg, df[:, [:x1, :x11, :x2, :x3]], df[:, [:target]]))
+        r = DataFrame(report(alg, df[:, [:x1, :x11, :x2]], df[:, [:target]]))
         f, scores = r[:, :feature], r[:, :score]
-        @test issetequal(f, [:x1, :x2, :x3])
+        @test issetequal(f, [:x1, :x2])
+    end
+
+    @testset "ShapleyValues" begin
+        X = rand(-5.0:0.1:5.0, 100000)
+        df = DataFrame(
+            :x1 => -X,
+            :x2 => X + rand(0.0:0.1:0.5, length(X)),
+            :x3 => X + rand(-5.0:0.1:5.0, length(X)),
+            :x4 => zeros(length(X)),
+            :target => X.^2,
+        )
+
+        idx, scores = selection(
+            ShapleyValues(),
+            df[:, [:x1, :x2, :x3, :x4]],
+            df[:, [:target]]
+        )
+
+        # Since our features are progressively more noisy we can just check that
+        # that the magnitude of the scores are sorted in descending order
+        @test issorted(abs.(round.(scores; digits=10)); rev=true)
+        @test length(idx) == 4
+        @test iszero(last(scores))
+
+        # Test dropping completely useless feature
+        idx, scores = selection(
+            ShapleyValues(; positive=true),
+            df[:, [:x1, :x2, :x3, :x4]],
+            df[:, [:target]]
+        )
+        @test length(idx) == 3
+        @test all(!iszero, scores)
+
+        # Test that this also works with `report`
+        alg = ShapleyValues()
+        r = DataFrame(report(alg, df[:, [:x1, :x2, :x3]], df[:, [:target]]))
+        f, scores = r[:, :feature], r[:, :score]
+        @test f == [:x1, :x2, :x3]
+        @test abs(scores[1]) > abs(scores[3])
+
+        # Test with array inputs
+        r2 = report(alg, Tables.matrix(df[:, [:x1, :x2, :x3]]), df.target)
+        @test DataFrame(r2).score == r.score
     end
 
     @testset "_to_real_array" begin

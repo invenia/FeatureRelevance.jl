@@ -38,7 +38,6 @@ function evaluate(criterion::PredictivePowerScore, x::Matrix{<:Real}, y::Vector{
 
         estimator = LGBMRegression()
 
-        # LightGBM doesn't like array views, so we need to call `collect`
         LightGBM.fit!(estimator, train_X, vec(train_y); verbosity)
         preds = LightGBM.predict(estimator, test_X; verbosity)
 

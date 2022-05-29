@@ -30,14 +30,16 @@ function evaluate(criterion::PredictivePowerScore, x::Matrix{<:Real}, y::Vector{
     naive_ae = 0.0
 
     verbosity = criterion.verbosity
-    folds = kfolds((x, y); k=criterion.k, obsdim=:first)
+    folds = kfolds((x', y'); k=criterion.k)
 
-    for ((train_X, train_y), (test_X, test_y)) in folds
+    for (train, test) in folds
+        train_X, train_y = permutedims.(train)
+        test_X, test_y = permutedims.(test)
+
         estimator = LGBMRegression()
 
-        # LightGBM doesn't like array views, so we need to call `collect`
-        LightGBM.fit!(estimator, collect(train_X), collect(train_y); verbosity)
-        preds = LightGBM.predict(estimator, collect(test_X); verbosity)
+        LightGBM.fit!(estimator, train_X, vec(train_y); verbosity)
+        preds = LightGBM.predict(estimator, test_X; verbosity)
 
         model_ae += sum(abs.(preds .- test_y))
         naive_ae += sum(abs.(median(train_y) .- test_y))
@@ -135,17 +137,18 @@ end
 
 function selection(alg::ShapleyValues, features::Matrix{<:Real}, target::Vector{<:Real})
     # Split test/train data
-    (train_X, train_y), (test_X, test_y) = splitobs((
-        features, target);
+    (train, test) = splitobs((
+        features', target');
         at=alg.train_size,
-        obsdim=:first
     )
+    train_X, train_y = permutedims.(train)
+    test_X, _ =  permutedims.(test)
 
     # Train and predict with LGBMRegression and predict_type=3
     verbosity=alg.verbosity
     estimator = LGBMRegression()
-    LightGBM.fit!(estimator, collect(train_X), collect(train_y); alg.verbosity)
-    preds = LightGBM.predict(estimator, collect(test_X); predict_type=3)  # 3 indicates SHAP
+    LightGBM.fit!(estimator, train_X, vec(train_y); alg.verbosity)
+    preds = LightGBM.predict(estimator, test_X; predict_type=3)  # 3 indicates SHAP
 
     # Reshape the output vector back to a matrix, so we can take the median for each feature.
     # The extra value per observation represents a bias value.

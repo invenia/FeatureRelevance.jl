@@ -2,7 +2,7 @@ module FeatureRelevance
 
 using DataFrames
 using InformationMeasures
-using MLDataPattern
+using MLUtils: splitobs, kfolds
 using Missings
 using Random
 using RecipesBase

@@ -103,14 +103,18 @@ function selection(
     )
     selected_indices = collect(eachindex(selected_scores))
 
+    # calculate how many non-missing elements in feature-target comparison
+    # NB: NaNs are used to represent missing values for LightGBM
+    n_obs = vcat(.!isnan.(features)' * hcat(.!isnan.(target))...)
+
     if alg.positive
         pos_idx = findall(>(0.0), selected_scores)
         if length(pos_idx) < length(selected_scores)
-            return selected_indices[pos_idx], selected_scores[pos_idx]
+            return selected_indices[pos_idx], n_obs[pos_idx], selected_scores[pos_idx]
         end
     end
 
-    return selected_indices, selected_scores
+    return selected_indices, n_obs, selected_scores
 end
 
 
@@ -157,16 +161,18 @@ function selection(alg::ShapleyValues, features::Matrix{<:Real}, target::Vector{
     selected_scores = mean(reshape(preds, (nfeatures+1, nobs)); dims=2)[1:nfeatures]
     selected_indices = collect(eachindex(selected_scores))
 
+    num_non_missing_obs = vcat(sum(.!isnan.(test_X), dims=1)...)
+
     # Since SHAP values can be positive or negative the `positive` kwarg will remove values
     # that are exactly 0.0.
     if alg.positive
         idx = findall(!iszero, selected_scores)
         if length(idx) < length(selected_scores)
-            return selected_indices[idx], selected_scores[idx]
+            return selected_indices[idx], num_non_missing_obs[idx], selected_scores[idx]
         end
     end
 
-    return selected_indices, selected_scores
+    return selected_indices, num_non_missing_obs, selected_scores
 end
 
 # Utility function for coercing tables and arrays into the correct LightGBM type

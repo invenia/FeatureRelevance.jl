@@ -63,10 +63,16 @@ function selection(alg::Top, features, target)
     end
 
     # Calculate our relevance stats
+    # this returns a Vector{Tuple{Int64, Float64}}
+    # The first item in the tuple is the number of elements compared
+    # (ignoring missing values, etc).  The second is the relevance score
     stats = [relevance(criterion, target, f) for f in features]
 
+    n_obs = [s[1] for s in stats]
+    scores = [s[2] for s in stats]
+
     # Get the sorted order
-    sorted = sortperm(stats; rev=true)
+    sorted = sortperm(scores; rev=true)
 
     # Drop any missing stats
     filtered = Iterators.filter(i -> !ismissing(stats[i]), sorted)
@@ -75,7 +81,7 @@ function selection(alg::Top, features, target)
     idx = collect(Iterators.take(filtered, n))
 
     length(idx) == n || @debug "Too few features selected ($(length(idx))), expected $n. Probably due to the relevance score being missing for certain feature target paris."
-    return idx, stats[idx]
+    return idx, n_obs[idx], scores[idx]
 end
 
 """
@@ -130,7 +136,13 @@ function selection(alg::Greedy, features, target)
 
     # We're gonna need to reference all of these relevances so we'll just pre-compute them
     indices = collect(eachindex(X))
-    relevances = [relevance(mi, target, f) for f in X]
+    # below returns a Vector{Tuple{Int64, Float64}}
+    # The first item in the tuple is the number of elements compared
+    # (ignoring missing values, etc).  The second is the relevance score
+    stats = [relevance(mi, target, f) for f in X]
+
+    n_obs = [s[1] for s in stats]
+    relevances = [s[2] for s in stats]
 
     # Running sum of our feature relevances, conditioned and unconditioned on the target
     β_rel, γ_rel = (zeros(length(relevances)) for _ in 1:2)
@@ -168,12 +180,12 @@ function selection(alg::Greedy, features, target)
                 redundancy = 0.0
 
                 if alg.β
-                    β_rel[k] += relevance(mi, prev, X[k])
+                    β_rel[k] += relevance(mi, prev, X[k])[2]
                     redundancy = (1.0 / i) * β_rel[k]
                 end
 
                 if alg.γ
-                    γ_rel[k] += relevance(cmi, prev, X[k], target)
+                    γ_rel[k] += relevance(cmi, prev, X[k], target)[2]
                     redundancy -= (1.0 / i) * γ_rel[k]
                 end
 
@@ -189,9 +201,9 @@ function selection(alg::Greedy, features, target)
     if alg.positive
         pos_idx = findall(>(0.0), selected_scores)
         if length(pos_idx) < length(selected_scores)
-            return selected_indices[pos_idx], selected_scores[pos_idx]
+            return selected_indices[pos_idx], n_obs[selected_indices[pos_idx]], selected_scores[pos_idx]
         end
     end
 
-    return selected_indices, selected_scores
+    return selected_indices, n_obs[selected_indices], selected_scores
 end

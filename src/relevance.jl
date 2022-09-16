@@ -11,13 +11,15 @@ dropping missing values and ensure there is more than 1 unique discrete value.
 - `z`: An optional set of values for conditioning the criterion on.
 
 # Returns
+- The number of elements compared.  This is important for interpretation since
+  very high relevance scores may be observed when there are many missing values
 - The relevance score as defined by the `criterion`
 """
 function relevance(criterion, x, y, z...)
     mask = map(t -> all(v -> !ismissing(v) && isfinite(v), t), zip(x, y, z...))
 
     # Early exit if we've filtered out all values
-    iszero(count(mask)) && return missing
+    iszero(count(mask)) && return 0, missing
 
     # make sure the values are actually different
     args = map((x, y, z...)) do arg
@@ -26,7 +28,7 @@ function relevance(criterion, x, y, z...)
         length(unique(abs.(v))) > 1 && abs(percent_diff) > 1e-5 && return v
         return missing
     end
-    any(ismissing, args) && return missing
+    any(ismissing, args) && return 0, missing
 
-    return criterion(args...)
+    return count(mask), criterion(args...)
 end

@@ -181,6 +181,8 @@ _to_real_array(data::Base.Generator) = _to_real_array(reduce(hcat, data))
 _to_real_array(data::AbstractVector{<:AbstractVector}) = _to_real_array(reduce(hcat, data))
 _to_real_array(data::AbstractVector{<:Real}) = _to_real_array(reshape(data, length(data), 1))
 function _to_real_array(data)
-    X = Tables.istable(data) ? Tables.matrix(data) : data
+    # Needing to check AbstractMatrix case for Tables 1.8 and later
+    # https://github.com/JuliaData/Tables.jl/compare/v1.7.0...v1.8.0#diff-2e4c89c64ff2b9f7660d2cdf40f63487512859b41d9de261fa552a9985009499L1
+    X = Tables.istable(data) && !isa(data, AbstractMatrix) ? Tables.matrix(data) : data
     return Matrix{Float64}(coalesce(X, NaN))
 end

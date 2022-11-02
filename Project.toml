@@ -1,6 +1,6 @@
 name = "FeatureRelevance"
 uuid = "040f642a-ad44-44b2-91d4-df3a5c5fa484"
-version = "0.2.2"
+version = "0.2.3"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -19,7 +19,7 @@ AxisKeys = "0.1"
 DataFrames = "1"
 InformationMeasures = "0.3"
 LightGBM = "0.5"
-MLUtils = "0.2"
+MLUtils = "0.2, 0.3"
 Missings = "1"
 RecipesBase = "1"
 Requires = "1"

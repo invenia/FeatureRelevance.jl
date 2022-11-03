@@ -21,6 +21,7 @@ Available algorithms include: `Top`, `GreedyMRMR`, `GreedyJMI`.
 
 # Returns:
 - `idx`: Location of each selected feature in features.
+- `n_obs`: Number of feature-target observations compared
 - `scores`: Scores associated with these features.
 """
 selection(alg, features, target)

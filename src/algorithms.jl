@@ -68,8 +68,7 @@ function selection(alg::Top, features, target)
     # (ignoring missing values, etc).  The second is the relevance score
     stats = [relevance(criterion, target, f) for f in features]
 
-    n_obs = [s[1] for s in stats]
-    scores = [s[2] for s in stats]
+    n_obs, scores = first.(stats), last.(stats)
 
     # Get the sorted order
     sorted = sortperm(scores; rev=true)

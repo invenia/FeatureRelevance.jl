@@ -11,7 +11,7 @@ of `features`.
 
 ## Returns:
 - A `Tables.rowtable` of each selected target x feature relevance score with columns
-  `:target`, `:feature` and `:score`.
+  `:target`, `:feature`, `:n_obs` and `:score`.
 """
 function report(alg::Algorithm, features, targets)
     X, y = _validate(features), _validate(targets)

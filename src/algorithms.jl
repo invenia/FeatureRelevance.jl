@@ -178,7 +178,7 @@ function selection(alg::Greedy, features, target)
                 redundancy = 0.0
 
                 if alg.β
-                    β_rel[k] += relevance(mi, prev, X[k])[2]
+                    β_rel[k] += last(relevance(mi, prev, X[k]))
                     redundancy = (1.0 / i) * β_rel[k]
                 end
 

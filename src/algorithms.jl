@@ -140,8 +140,7 @@ function selection(alg::Greedy, features, target)
     # (ignoring missing values, etc).  The second is the relevance score
     stats = [relevance(mi, target, f) for f in X]
 
-    n_obs = [s[1] for s in stats]
-    relevances = [s[2] for s in stats]
+     n_obs, scores = first.(stats), last.(stats)
 
     # Running sum of our feature relevances, conditioned and unconditioned on the target
     β_rel, γ_rel = (zeros(length(relevances)) for _ in 1:2)

@@ -76,7 +76,7 @@ using FeatureRelevance:
             :target => X.^2,
         )
 
-        idx, scores = selection(
+        idx, n_obs, scores = selection(
             ShapleyValues(),
             df[:, [:x1, :x2, :x3, :x4]],
             df[:, [:target]]
@@ -89,7 +89,7 @@ using FeatureRelevance:
         @test iszero(last(scores))
 
         # Test dropping completely useless feature
-        idx, scores = selection(
+        idx, n_obs, scores = selection(
             ShapleyValues(; positive=true),
             df[:, [:x1, :x2, :x3, :x4]],
             df[:, [:target]]
@@ -100,9 +100,10 @@ using FeatureRelevance:
         # Test that this also works with `report`
         alg = ShapleyValues()
         r = DataFrame(report(alg, df[:, [:x1, :x2, :x3]], df[:, [:target]]))
-        f, scores = r[:, :feature], r[:, :score]
+        f, n_obs, scores = r[:, :feature], r[:, :n_obs], r[:, :score]
         @test f == [:x1, :x2, :x3]
         @test abs(scores[1]) > abs(scores[3])
+        @test n_obs == [20000, 20000, 20000]
 
         # Test with array inputs
         r2 = report(alg, Tables.matrix(df[:, [:x1, :x2, :x3]]), df.target)

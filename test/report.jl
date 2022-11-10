@@ -8,13 +8,13 @@
         features = DataFrame(rand(4, 10), :auto)
         m = DataFrame(report(ntop, features, targets))
 
-        @test size(m) == (2, 3) # (nselect, 3)
-        @test propertynames(m) == [:target, :feature, :score]
+        @test size(m) == (2, 4) # (nselect, 4)
+        @test propertynames(m) == [:target, :feature, :n_obs, :score]
         @test count(r -> r === :t1, m.target) == 2
 
         m = DataFrame(report(alltop, features, targets))
-        @test size(m) == (10, 3) # (all, 3)
-        @test propertynames(m) == [:target, :feature, :score]
+        @test size(m) == (10, 4) # (all, 4)
+        @test propertynames(m) == [:target, :feature, :n_obs, :score]
         @test count(r -> r === :t1, m.target) == 10
     end
 
@@ -23,14 +23,14 @@
         features = DataFrame(rand(4, 10), :auto)
         m = DataFrame(report(ntop, features, targets))
 
-        @test size(m) == (4, 3) # (ntargets x nselect, 3)
-        @test propertynames(m) == [:target, :feature, :score]
+        @test size(m) == (4, 4) # (ntargets x nselect, 4)
+        @test propertynames(m) == [:target, :feature, :n_obs, :score]
         @test issetequal(m.target, propertynames(targets))
         @test count(r -> r === :t1, m.target) == 2
 
         m = DataFrame(report(alltop, features, targets))
-        @test size(m) == (20, 3) # (ntargets x all, 3)
-        @test propertynames(m) == [:target, :feature, :score]
+        @test size(m) == (20, 4) # (ntargets x all, 4)
+        @test propertynames(m) == [:target, :feature, :n_obs, :score]
         @test issetequal(m.target, propertynames(targets))
         @test count(r -> r === :t1, m.target) == 10
     end
@@ -45,7 +45,7 @@
         features[:, 5] = targets + 0.9*rand(100)
         m = DataFrame(report(ntop, features, targets))
 
-        @test propertynames(m) == [:target, :feature, :score]
+        @test propertynames(m) == [:target, :feature, :n_obs, :score]
         @test m[:, :feature] == [8, 5]
     end
 end

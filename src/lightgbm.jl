@@ -2,7 +2,7 @@
 # Since that package requires manually installing the lightgbm binary dependency and
 # several MLJ packages we're keeping this as an optional dependency for now.
 # https://gitlab.invenia.ca/invenia/research/FeatureRelevance.jl/-/issues/6
-using LightGBM
+using .LightGBM
 
 """
     PredictivePowerScore(; k=4, verbosity=-1)

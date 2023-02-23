@@ -1,6 +1,5 @@
 # FeatureRelevance.jl
 
-[![Docs: Latest](https://img.shields.io/badge/docs-latest-blue.svg)](http://docs.invenia.ca/invenia/research/FeatureRelevance.jl)
 
 A package for scoring and selecting relevant features for 1 or more target variables.
 
